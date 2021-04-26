@@ -1,4 +1,19 @@
 @import './normalize.scss';
-body{
-    background-color: burlywood;
+@import './ui.scss';
+
+@mixin webkit($attr, $value) {
+    -webkit-#{$attr}: $value;
+    -moz-#{$attr}: $value;
+    -ms-#{$attr}: $value;
+    -o-#{$attr}: $value;
+    #{$attr}: $value;
 }
+
+@mixin webkit_a($name,$value){
+    #{$name}: -webkit-#{$value};
+    #{$name}: -moz-#{$value};
+    #{$name}: -ms-#{$value};
+    #{$name}: -o-#{$value};
+    #{$name}: #{$value};
+}
+
