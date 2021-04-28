@@ -31,7 +31,9 @@ const routes = [
     path: '/console',
     name: 'Console',
     meta: {
-      name: '控制台',
+      title: '控制台',
+      icon: 'console',
+      icon_class: 'icon_console',
     },
     hidden: false,
     redirect: 'index',

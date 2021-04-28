@@ -276,12 +276,12 @@ export default {
           code: ruleForm.vcode
         }
         Register(requestData).then(response => {
-          Elmessage({
+          ElMessage({
             message: response.message,
             type: "success",
           })
         }).catch(error => {
-          Elmessage({
+          ElMessage({
             message: error.message,
             type: "error",
           })

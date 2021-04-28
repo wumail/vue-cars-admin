@@ -1,6 +1,7 @@
 
 //菜单宽度
 $navWidth:250px;
+$navminWidth:64px;
 $headerHeight:75px;
 
 $color_nav_main:#f56c6c;
@@ -9,6 +10,9 @@ $color_nav_main:#f56c6c;
 .btn-block{
     display: block;
     width: 100%;
+}
+.el-menu{
+    border: none;
 }
 
 .el-menu-item-group__title{
