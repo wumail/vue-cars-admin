@@ -89,14 +89,22 @@
 </template>
 
 <script>
-import sha1 from "js-sha1";
-import { GetCode } from "@/api/login.js";
-import { ElMessage  } from 'element-plus';
 import { onMounted, reactive,ref } from "vue";
+import { useStore } from "vuex";
+import { useRouter, useRoute } from 'vue-router';
+
+import sha1 from "js-sha1";
+import { ElMessage  } from 'element-plus';
+
+import { GetCode,Register } from "@/api/login.js";
 import { stripscript,validate_email,validate_pwd,validate_vcode } from "@/utils/validate.js";
+
 export default {
     name:'login',
     setup(){
+      const store = useStore();
+      const router = useRouter();
+
       //声明对象类型使用reactive
       const menu_switch_item = reactive([
         { type: "login", label: "登录" },
@@ -191,7 +199,7 @@ export default {
         if(!validate_email(ruleForm.username)) {
           ElMessage({
             message: "邮箱格式有误，请重新输入！！",
-            type: "error"
+            type: "error",
           })
           return false;
         }
@@ -252,17 +260,13 @@ export default {
           password: sha1(ruleForm.password),
           code: ruleForm.vcode
         }
-        // root.$store.dispatch('app/loginAction', requestData).then(response => {
-        //   ElMessage({
-        //     message: response.message,
-        //     type: "success"
-        //   })
-        //   // 页面跳转
-        //   root.$router.push({ name: 'ConsoleIndex' })
-        // }).catch(error => {
-        //   // 重置数据
-        //   reset();
-        // })
+        store.dispatch('app/loginAction', requestData).then(response => {
+          // 页面跳转
+          router.push({ name: 'Console' })
+        }).catch(error => {
+          // 重置数据
+          reset();
+        })
       })
       // 注册
       const register = (() => {
@@ -274,12 +278,12 @@ export default {
         Register(requestData).then(response => {
           Elmessage({
             message: response.message,
-            type: "success"
+            type: "success",
           })
         }).catch(error => {
           Elmessage({
             message: error.message,
-            type: "error"
+            type: "error",
           })
         }).finally(()=>{
           reset();

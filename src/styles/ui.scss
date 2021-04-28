@@ -1,4 +1,30 @@
+
+//菜单宽度
+$navWidth:250px;
+$headerHeight:75px;
+
+$color_nav_main:#f56c6c;
+
+
 .btn-block{
     display: block;
     width: 100%;
+}
+
+.el-menu-item-group__title{
+    padding: 0 !important;
+}
+
+.el-submenu .el-menu-item{
+    font-size: 14px;
+    padding-left: 50px !important;
+    &.is-active{
+        background-color: rgba($color: $color_nav_main , $alpha: .5) !important;
+    }
+}
+
+.el-submenu{
+    &.is-active.is-opened .el-submenu__title{
+        background-color: $color_nav_main !important;
+    }
 }
