@@ -25,12 +25,14 @@ export default {
 
 <style lang="scss">
 .main-wrap {
+  overflow-y: scroll;
+  overflow-x: hidden;
   position: fixed;
   left: $navWidth;
   top: $headerHeight;
   right: 0;
   bottom: 0;
-  border: 20px solid #f7f7f7;
+  border: 20px solid #e7e7e7;
   padding: 10px;
   @include webkit(box-sizing, border);
   @include webkit(transition, all 0.3s ease 0s);

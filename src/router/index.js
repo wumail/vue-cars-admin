@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import Layout from '@/views/layout/index.vue';
 
 const routes = [
   {
@@ -37,7 +38,7 @@ const routes = [
     },
     hidden: false,
     redirect: 'index',
-    component: () => import('@/views/layout/index.vue'),
+    component: Layout,
     children: [
       {
         path: '/index',
@@ -55,6 +56,57 @@ const routes = [
       //   },
       //   component: () => import('@/views/Home.vue'),
       // },
+    ]
+  },
+  {
+    path: '/parking',
+    name: 'Parking',
+    meta: {
+      title: '停车场',
+      icon: 'console',
+      icon_class: 'icon_console',
+    },
+    hidden: false,
+    component: Layout,
+    children: [
+      {
+        path: '/parkingIndex',
+        name: 'ParkingIndex',
+        meta: {
+          name: '列表管理',
+        },
+        component: () => import('@/views/parking/index.vue'),
+      },
+      {
+        path: '/parkingAdd',
+        name: 'ParkingAdd',
+        meta: {
+          name: '新增停车场',
+        },
+        component: () => import('@/views/parking/add.vue'),
+      },
+    ]
+  },
+  {
+    path: '/cars',
+    name: 'Cars',
+    meta: {
+      title: '车辆品牌',
+      icon: 'console',
+      icon_class: 'icon_console',
+    },
+    hidden: false,
+    component: Layout,
+    children: [
+      {
+        path: '/carsList',
+        name: 'CarsList',
+        meta: {
+          name: '品牌列表',
+        },
+        component: () => import('@/views/cars/index.vue'),
+      },
+      
     ]
   },
 

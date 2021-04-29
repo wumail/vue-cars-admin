@@ -88,7 +88,6 @@ export default {
   left: 0;
   width: $navWidth;
   height: 100vh;
-  z-index: 5;
   background-color: #344a5f;
   @include webkit(transition, all 0.3s ease 0s);
   .logo {

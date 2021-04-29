@@ -1,8 +1,8 @@
 <template>
-  <div>
-      <LayoutNavigator />
-      <LayoutHeader />
-      <LayoutContent />
+  <div >
+    <LayoutNavigator />
+    <LayoutHeader />
+    <LayoutContent />
   </div>
 </template>
 

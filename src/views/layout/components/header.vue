@@ -92,7 +92,6 @@ export default {
   right: 0;
   left: $navWidth;
   height: $headerHeight;
-  z-index: 4;
   background-color: #fff;
   @include webkit(box-shadow, 0 3px 16px 0 rgba(0, 0, 0, 0.1));
   @include webkit(transition, all 0.3s ease 0s);
@@ -115,12 +114,12 @@ export default {
   }
   .logout {
     border-left: 2px solid #ededed;
-    width: 75px;
+    width: 64;
     text-align: center;
     line-height: 75px;
     font-size: 25px;
     padding-left: 20px;
-    padding-right: 15px;
+    padding-right: 12px;
     cursor: pointer;
   }
   .face-info {
