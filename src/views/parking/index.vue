@@ -128,6 +128,7 @@ export default {
           region: '',
           type:'',
         })
+        
         const props = reactive({ expandTrigger: 'hover' })
         const value = reactive([])
         const options = reactive([

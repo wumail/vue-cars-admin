@@ -88,8 +88,8 @@ const routes = [
     ]
   },
   {
-    path: '/cars',
-    name: 'Cars',
+    path: '/brand',
+    name: 'Brand',
     meta: {
       title: '车辆品牌',
       icon: 'console',
@@ -99,12 +99,12 @@ const routes = [
     component: Layout,
     children: [
       {
-        path: '/carsList',
-        name: 'CarsList',
+        path: '/brandList',
+        name: 'BrandList',
         meta: {
           name: '品牌列表',
         },
-        component: () => import('@/views/cars/index.vue'),
+        component: () => import('@/views/brand/index.vue'),
       },
       
     ]
