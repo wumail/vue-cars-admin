@@ -1,0 +1,224 @@
+<template>
+  <div class="cars-add">
+    <el-form
+      ref="form"
+      :model="form"
+      label-width="100px"
+    >
+      <el-form-item label="车辆品牌">
+        <el-select
+          v-model="form.brand"
+          placeholder="请选择"
+        >
+          <el-option
+            label='奔驰'
+            value='benz'
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="型号">
+        <el-select
+          v-model="form.modle"
+          placeholder="请选择"
+        >
+          <el-option
+            label='g500'
+            value='benz-g500'
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="停车场">
+        <el-select
+          v-model="form.parking"
+          placeholder="请选择"
+        >
+          <el-option
+            label='太白停车场'
+            value='taibaiparking'
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="车牌号">
+        <el-input></el-input>
+      </el-form-item>
+
+      <el-form-item label="车架号">
+        <el-input></el-input>
+      </el-form-item>
+
+      <el-form-item label="发动机号">
+        <el-input></el-input>
+      </el-form-item>
+
+      <el-form-item label="年检">
+        <el-radio-group v-model="form.resource">
+          <el-radio label="已检"></el-radio>
+          <el-radio label="未检"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+      <el-form-item label="保养日期">
+        <el-row :gutter='30'>
+          <el-col :span='6'>
+            <el-input v-model="form.data"></el-input>
+          </el-col>
+          <el-col :span='12'>下次保养日期</el-col>
+        </el-row>
+      </el-form-item>
+
+      <el-form-item label="档位">
+        <el-radio-group v-model="form.resource">
+          <el-radio label="自动档"></el-radio>
+          <el-radio label="手动档"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+      <el-form-item label="能源类型">
+        <el-radio-group v-model="energy">
+          <el-radio :label="1">油</el-radio>
+          <el-radio :label="2">电</el-radio>
+          <el-radio :label="3">混合</el-radio>
+        </el-radio-group>
+        <div class="energy-progress">
+          <div
+            class="oil"
+            v-if="energy == 3 || energy == 1"
+          >
+            <el-row>
+              <el-col :span='1'>
+                <span>油量</span>
+              </el-col>
+              <el-col :span='8'>
+                <el-progress
+                  :stroke-width='15'
+                  :percentage="percentage"
+                  :color="progressColors"
+                ></el-progress>
+              </el-col>
+              <el-col :span='2'>
+                <el-input
+                  v-model="percentage"
+                  type='number'
+                  @input='input'
+                  size='small'
+                ></el-input>
+              </el-col>
+            </el-row>
+          </div>
+          <div
+            class="electron"
+            v-if="energy == 3 || energy == 2"
+          >
+            <el-row>
+              <el-col :span='1'>
+                <span>电量</span>
+              </el-col>
+              <el-col :span='8'>
+                <el-progress
+                  :stroke-width='15'
+                  :percentage="percentage"
+                  :color="progressColors"
+                ></el-progress>
+              </el-col>
+              <el-col :span='2'>
+                <el-input
+                  v-model="percentage"
+                  type='number'
+                  @input='input'
+                  size='small'
+                ></el-input>
+              </el-col>
+            </el-row>
+          </div>
+        </div>
+      </el-form-item>
+
+      <el-form-item label="禁启用">
+        <el-radio-group v-model="form.resource">
+          <el-radio label="禁用"></el-radio>
+          <el-radio label="启用"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+    
+      <el-form-item>
+        <el-button type="primary">立即创建</el-button>
+      </el-form-item>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import { reactive, ref } from 'vue'
+export default {
+    name:'CarsAdd',
+    setup(){
+      const form = reactive({
+          name: '',
+          region: '',
+          date1: '',
+          date2: '',
+          delivery: false,
+          type: [],
+          desc: '',
+      })
+
+      const energy = ref(1);
+      const percentage = ref(10);
+
+      const progressColors = reactive(
+        [
+          {color: '#f56c6c', percentage: 30},
+          {color: '#e6a23c', percentage: 70},
+          {color: '#5cb87a', percentage: 100}
+        ]
+      )
+      const input = ()=>{
+          if(percentage.value<0){
+              percentage.value = 0;
+          }
+          if(percentage.value>=100){
+              percentage.value = 100;
+          }
+      }
+
+    //   const log=()=>{
+    //       console.log(energy.value);
+    //   }
+      return{
+        form,
+        progressColors,
+        percentage,
+        input,
+        energy,
+        // log,
+      }
+    }
+}
+</script>
+
+<style lang="scss">
+.cars-add {
+  .el-form-item {
+    display: block;
+    text-align: left;
+  }
+  .address-map {
+    width: 100%;
+    height: 250px;
+    border: 1px solid #ccc;
+  }
+}
+.oil,
+.electron {
+  .el-row {
+    align-items: center !important;
+  }
+}
+.oil {
+  margin-bottom: 10px;
+}
+</style>

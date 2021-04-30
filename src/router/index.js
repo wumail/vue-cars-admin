@@ -109,7 +109,36 @@ const routes = [
       
     ]
   },
-
+  {
+    path: '/cars',
+    name: 'Cars',
+    meta: {
+      title: '车辆管理',
+      icon: 'console',
+      icon_class: 'icon_console',
+    },
+    hidden: false,
+    component: Layout,
+    children: [
+      {
+        path: '/carsList',
+        name: 'CarsList',
+        meta: {
+          name: '车辆列表',
+        },
+        component: () => import('@/views/cars/index.vue'),
+      },
+      {
+        path: '/carsAdd',
+        name: 'CarsAdd',
+        meta: {
+          name: '新增车辆',
+        },
+        component: () => import('@/views/cars/add.vue'),
+      },
+      
+    ]
+  },
 ];
 
 const router = createRouter({
