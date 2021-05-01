@@ -2,12 +2,11 @@
   <div class="cars-add">
     <el-form
       ref="form"
-      :model="form"
       label-width="100px"
     >
       <el-form-item label="车辆品牌">
         <el-select
-          v-model="form.brand"
+          v-model="brand"
           placeholder="请选择"
         >
           <el-option
@@ -19,7 +18,7 @@
 
       <el-form-item label="型号">
         <el-select
-          v-model="form.modle"
+          v-model="modle"
           placeholder="请选择"
         >
           <el-option
@@ -31,7 +30,7 @@
 
       <el-form-item label="停车场">
         <el-select
-          v-model="form.parking"
+          v-model="parking"
           placeholder="请选择"
         >
           <el-option
@@ -54,25 +53,25 @@
       </el-form-item>
 
       <el-form-item label="年检">
-        <el-radio-group v-model="form.resource">
-          <el-radio label="已检"></el-radio>
-          <el-radio label="未检"></el-radio>
+        <el-radio-group v-model="annual">
+          <el-radio :label="'have'">已检</el-radio>
+          <el-radio :label="'havent'">未检</el-radio>
         </el-radio-group>
       </el-form-item>
 
       <el-form-item label="保养日期">
         <el-row :gutter='30'>
           <el-col :span='6'>
-            <el-input v-model="form.data"></el-input>
+            <el-input v-model="date"></el-input>
           </el-col>
           <el-col :span='12'>下次保养日期</el-col>
         </el-row>
       </el-form-item>
 
       <el-form-item label="档位">
-        <el-radio-group v-model="form.resource">
-          <el-radio label="自动档"></el-radio>
-          <el-radio label="手动档"></el-radio>
+        <el-radio-group v-model="gear">
+          <el-radio :label="'automatic'">自动档</el-radio>
+          <el-radio :label="'manual'">手动档</el-radio>
         </el-radio-group>
       </el-form-item>
 
@@ -136,14 +135,36 @@
         </div>
       </el-form-item>
 
+      <el-form-item
+        v-for="(domain, index) in domains"
+        :label="'车辆属性' + (index+1)"
+        :key="domain.key"
+      >
+        <el-row :gutter='30'>
+          <el-col :span='8'>
+            <el-input v-model="domain.value"></el-input>
+          </el-col>
+          <el-col :span='2'>
+            <el-button @click.prevent="removeDomain(domain)">删除</el-button>
+          </el-col>
+        </el-row>
+
+      </el-form-item>
+      <el-form-item>
+        <el-button @click="addDomain">新增属性</el-button>
+      </el-form-item>
+
+      <el-form-item label="描述">
+        <div ref="editor"></div>
+      </el-form-item>
+
       <el-form-item label="禁启用">
-        <el-radio-group v-model="form.resource">
-          <el-radio label="禁用"></el-radio>
-          <el-radio label="启用"></el-radio>
+        <el-radio-group v-model="disabled">
+          <el-radio :label="'禁用'"></el-radio>
+          <el-radio :label="'启用'"></el-radio>
         </el-radio-group>
       </el-form-item>
 
-    
       <el-form-item>
         <el-button type="primary">立即创建</el-button>
       </el-form-item>
@@ -152,23 +173,39 @@
 </template>
 
 <script>
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref,toRefs } from 'vue'
+import WangEditor  from 'wangeditor'
 export default {
     name:'CarsAdd',
     setup(){
-      const form = reactive({
-          name: '',
-          region: '',
-          date1: '',
-          date2: '',
-          delivery: false,
-          type: [],
-          desc: '',
+      const editor = ref();
+      let instance = null;
+      const forms = reactive({
+          brand: '',
+          parking: '',
+          modle: '',
+          carsnum1: '',
+          carsnum2: '',
+          carsnum3: '',
+          date:'',
+          energy:1,
+          annual:'have',
+          gear:'manual',
+          disabled:'禁用',
       })
 
-      const energy = ref(1);
-      const percentage = ref(10);
+      const form = toRefs(forms);
+      
+      const domains = reactive(
+        [  
+         {
+            value: '',
+          }
+        ]
+      )
 
+      // const annual = ref('have');
+      const percentage = ref(10);
       const progressColors = reactive(
         [
           {color: '#f56c6c', percentage: 30},
@@ -176,6 +213,7 @@ export default {
           {color: '#5cb87a', percentage: 100}
         ]
       )
+
       const input = ()=>{
           if(percentage.value<0){
               percentage.value = 0;
@@ -184,17 +222,40 @@ export default {
               percentage.value = 100;
           }
       }
+      
+      const removeDomain =(item)=> {
+        var index = domains.indexOf(item)
+        if (index !== -1) {
+          domains.splice(index, 1)
+        }
+      }
+
+      const addDomain = () =>{
+        domains.push({
+          value: '',
+          key: Date.now()
+        });
+      }
 
     //   const log=()=>{
     //       console.log(energy.value);
     //   }
+
+    onMounted(()=>{
+      instance = new WangEditor(editor.value);
+      instance.create() 
+    })
       return{
-        form,
+        ...form,
         progressColors,
         percentage,
         input,
-        energy,
-        // log,
+        removeDomain,
+        addDomain,
+        domains,
+        editor,
+        // energy,
+        // annual,
       }
     }
 }

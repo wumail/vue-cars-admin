@@ -29,7 +29,7 @@ service.interceptors.response.use(function (response) {
         ElMessage.error(data.message);
         return Promise.reject(data);
     }else {
-        ElMessage.success(data.message);
+        // ElMessage.success(data.message);
         return data; // return Promise.resolve(data);
     }
 }, function (error) {

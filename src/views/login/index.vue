@@ -262,6 +262,10 @@ export default {
         }
         store.dispatch('app/loginAction', requestData).then(response => {
           // 页面跳转
+          ElMessage({
+            message: response.message,
+            type: "success",
+          })
           router.push({ name: 'Console' })
         }).catch(error => {
           // 重置数据

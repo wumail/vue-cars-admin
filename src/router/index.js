@@ -70,8 +70,8 @@ const routes = [
     component: Layout,
     children: [
       {
-        path: '/parkingIndex',
-        name: 'ParkingIndex',
+        path: '/parkingList',
+        name: 'ParkingList',
         meta: {
           name: '列表管理',
         },

@@ -8,15 +8,14 @@
     >
       <el-form
         ref="form"
-        :model="form"
         label-width="100px"
       >
         <el-form-item label="车辆品牌">
-          <el-input v-model="form.name"></el-input>
+          <el-input v-model="brand"></el-input>
         </el-form-item>
 
         <el-form-item label="品牌型号">
-          <el-input v-model="form.name"></el-input>
+          <el-input v-model="model"></el-input>
         </el-form-item>
 
         <el-form-item label="LOGO">
@@ -47,7 +46,7 @@
         </el-form-item>
 
         <el-form-item label="禁启用">
-          <el-radio-group v-model="form.resource">
+          <el-radio-group v-model="disabled">
             <el-radio label="禁用"></el-radio>
             <el-radio label="启用"></el-radio>
           </el-radio-group>
@@ -56,7 +55,7 @@
         <el-form-item label="描述">
           <el-input
             type='textarea'
-            v-model="form.name"
+            v-model="description"
           ></el-input>
         </el-form-item>
 
@@ -78,7 +77,7 @@
 </template>
 
 <script>
-import { inject, onMounted, reactive, ref } from 'vue';
+import { inject, onMounted, reactive, ref, toRef, toRefs } from 'vue';
 
 export default {
     name:'AddCars',
@@ -87,16 +86,14 @@ export default {
     },
     setup(){
         const dialogVisible = inject('dialogVisible');
-        const form = reactive({
-          name: '',
-          region: '',
-          date1: '',
-          date2: '',
-          delivery: false,
-          type: [],
-          resource: '',
-          desc: ''
+        const forms = reactive({
+          brand: '',
+          model: '',
+          description: '',
+          disabled: '启用',
         })
+
+        const form = toRefs(forms);
 
         const close = ()=>{
             inject('dialogVisible',false);
@@ -106,7 +103,7 @@ export default {
         //     console.log(dialogVisible);
         // })
         return{
-            form,
+            ...form,
             close,
             dialogVisible,
         }
