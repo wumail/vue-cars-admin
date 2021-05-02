@@ -4,6 +4,7 @@
       title="新增车辆品牌"
       v-model="dialogVisible"
       :close-on-click-modal="false"
+      destroy-on-close
       center
     >
       <el-form

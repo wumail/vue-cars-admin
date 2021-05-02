@@ -5,40 +5,74 @@
         <el-col :span='20'>
           <el-form
             :inline="true"
-            :model="formInline"
-            
+            :model="filter"
+            ref='filterRef'
             class="demo-form-inline"
           >
-            <el-form-item label="停车场">
+            <el-form-item
+              label="停车场"
+              prop='parkingName'
+            >
               <el-input
-                v-model="formInline.park"
+                v-model="filter.parkingName"
                 placeholder="停车场"
               ></el-input>
             </el-form-item>
-            <el-form-item label="区域">
-              <el-cascader
-                v-model="value"
-                :options="options"
-                :props="props"
-              ></el-cascader>
+            <el-form-item
+              label="区域"
+              prop='area'
+            >
+              <CityArea
+                ref="parkingadd_cascader"
+                :areavalue='filter.area'
+                @areaChange='areaChange'
+              />
             </el-form-item>
-            <el-form-item label="类型">
+            <el-form-item
+              label="类型"
+              prop='type'
+            >
               <el-select
-                v-model="formInline.type"
+                v-model="filter.type"
                 placeholder="类型"
+                class="width-100"
               >
                 <el-option
-                  label="室内"
-                  value="shanghai"
+                  v-for="type in parking_type"
+                  :key="type.value"
+                  :value="type.value"
+                  :label="type.label"
                 ></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item
+              label="禁启用"
+              prop='status'
+            >
+              <el-select
+                v-model="filter.status"
+                placeholder="禁启用"
+                class="width-100"
+              >
                 <el-option
-                  label="室外"
-                  value="beijing"
+                  v-for="status in parking_status"
+                  :key="status.value"
+                  :value="status.value"
+                  :label="status.label"
                 ></el-option>
               </el-select>
             </el-form-item>
             <el-form-item>
-              <el-button type="danger">查询</el-button>
+              <el-button
+                type="primary"
+                @click='search'
+              >查询</el-button>
+            </el-form-item>
+            <el-form-item>
+              <el-button
+                type="info"
+                @click='reset'
+              >重置查询</el-button>
             </el-form-item>
           </el-form>
         </el-col>
@@ -54,7 +88,7 @@
     </div>
     <div class="table-form">
       <el-table
-        :data="tableData"
+        :data="resource.tableData"
         border
         style="width: 100%"
       >
@@ -65,7 +99,7 @@
         </el-table-column>
 
         <el-table-column
-          prop="name"
+          prop="parkingName"
           label="停车场名称"
         >
         </el-table-column>
@@ -77,7 +111,7 @@
         </el-table-column>
 
         <el-table-column
-          prop="area"
+          prop="address"
           label="区域"
         >
         </el-table-column>
@@ -89,24 +123,36 @@
         </el-table-column>
 
         <el-table-column
-          prop="disabled"
+          prop="status"
           label="禁启用"
         >
-          <template #disabled>
+          <template v-slot='scoped'>
             <el-switch
-              :model='disabled'
+              v-model="scoped.row.status"
+              :active-value='false'
+              :inactive-value='true'
               active-color="#13ce66"
               inactive-color="#ff4949"
             >
             </el-switch>
           </template>
+
         </el-table-column>
-        
+
         <el-table-column
-          prop="address"
+          prop="lnglat"
           label="查看位置"
         >
+          <template v-slot='scoped'>
+            <el-button
+              v-model="scoped.row.lnglat"
+              type="primary"
+              size="small"
+              @click='amapDialog(scoped.row)'
+            >查看</el-button>
+          </template>
         </el-table-column>
+
         <el-table-column label="操作">
           <el-button
             type="primary"
@@ -119,64 +165,156 @@
 
         </el-table-column>
       </el-table>
+      <div>
+        <el-row>
+          <el-col :span="12"></el-col>
+          <el-col
+            :span="12"
+            style="margin-top:10px"
+          >
+            <span class="demonstration"></span>
+            <el-pagination
+              class="pull-right"
+              background
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="resource.current_page"
+              :page-sizes="[10, 20, 50]"
+              :page-size="10"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="resource.total"
+            >
+            </el-pagination>
+          </el-col>
+        </el-row>
+      </div>
     </div>
-
+    <AmapDialog ref='amapRef' />
   </div>
 </template>
 
 <script>
-import { onMounted, reactive } from 'vue';
+import { onBeforeMount, provide, reactive, ref, toRefs } from 'vue';
+import { useStore } from "vuex";
+
+import { ParkingList } from "@/api/parking.js";
+import CityArea from '@/components/cascader/cityArea.vue';
+import AmapDialog from "@/components/dialog/amapDialog.vue";
+
 export default {
     name:'Parking',
+    components:{
+      CityArea,
+      AmapDialog,
+    },
     setup(){
-        const formInline = reactive( {
-          park: '',
-          region: '',
+        //store
+        const store = useStore();
+        const parking_status = store.state.config.parking_status;
+        const parking_type = store.state.config.parking_type;
+        //子组件Ref
+        const filterRef = ref('');
+        const parkingadd_cascader = ref('');
+        const amapRef = ref('');
+        //ref
+        //filter
+        const filter = reactive( {
+          parkingName: '',
+          area: '',
           type:'',
+          status:'',
         })
-        
+        const filters = toRefs(filter);
+        //cascader
         const props = reactive({ expandTrigger: 'hover' })
         const value = reactive([])
-        const options = reactive([
-            {
-                value:11,
-                label:'四川省',
-                children:[
-                    {
-                        value:11,
-                        label:'绵阳市',
-                    },  
-                ]
-            }
-        ])
 
-        const tableData = reactive(
-            [
-                {
-                    name:'太白停车场',
-                    type:'室外',
-                    area:'四川省绵阳市',
-                    carsNumber:20,
-                    disabled:true,
-                    address:'4512,2314',
-                },
-                {
-                    name:'南岗停车场',
-                    type:'室外',
-                    area:'黑龙江省哈尔滨市',
-                    carsNumber:10,
-                    disabled:false,
-                    address:'4512,2314',
-                },
-            ]
-        )
+        //data resource
+        const resource = reactive({
+          tableData:[],
+          total:0,
+          current_page:1,
+          pageSize:10,
+          pageNumber:1,
+        })
+
+        //provider
+        const dialogVisible = ref(false);
+        provide('dialogVisible',dialogVisible);
+        provide('lnglat',dialogVisible);
+
+        onBeforeMount(()=>{
+          getDataResource()
+        })
+
+        const getDataResource = ()=>{
+          const data={
+            pageSize:resource.pageSize,
+            pageNumber:resource.pageNumber,
+          }
+          for (const key in filters) {
+            let value = eval("filters."+key)
+            if(value.value){
+              data[`${key}`] = value.value;
+            }
+          }
+          ParkingList(data).then((response)=>{
+            const reqdata = response.data;
+              console.log(reqdata);
+            if(reqdata){
+              resource.tableData = reqdata.data;
+              resource.total = reqdata.total
+            }
+          })
+        }
+
+        const areaChange = (val)=>{
+          filter.area = val;
+        }
+
+        function handleSizeChange(val){
+          resource.pageSize = val;
+          getDataResource();
+        }
+
+        function handleCurrentChange(val){
+          resource.current_page=val;
+          getDataResource();
+        }
+
+        function search(){
+          getDataResource();
+        }
+
+        function reset(){
+          filterRef.value.resetFields();
+          parkingadd_cascader.value.clearCascader();
+          getDataResource();
+        }
+
+        function amapDialog(row){
+          dialogVisible.value=true;
+          amapRef.value.setLnglat(row.lnglat);
+          amapRef.value.setTitle(row.parkingName);
+        }
 
         return{
-            formInline,
+            filter,
+            filterRef,
+            parkingadd_cascader,
             props,
             value,
-            options,
-            tableData,
+            resource,
+            handleSizeChange,
+            handleCurrentChange,
+            areaChange,
+            parking_status,
+            parking_type,
+            search,
+            reset,
+            amapDialog,
+            amapRef,
+
         }
     }
 }

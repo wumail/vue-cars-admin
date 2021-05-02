@@ -81,12 +81,16 @@ export default {
             emit('setMapCenter',address.value.join(''));
         }
 
+        const clearCascader=()=>{
+            area.value = [];
+        }
         return{
             cascader_options,
             cascader_props,
             area,
             changeValue,
             getAddress,
+            clearCascader,
         }
     }
 }

@@ -12,6 +12,16 @@ import AMapLoader from '@amap/amap-jsapi-loader';
 export default {
     name: 'AMap',
     emits:['gnoteChange'],
+    props:{
+      disabled:{
+        type:Boolean,
+        default:false,
+      },
+      lnglat:{
+        type:Array,
+        default:[116.391467, 39.927761]
+      }
+    },
     setup(props,{emit}){
       var map=null;
       var marker = null;
@@ -20,23 +30,29 @@ export default {
         "plugins": ['AMap.Geocoder'],                                      
       }).then((AMap)=>{
           map = new AMap.Map('amap-wrap',{
-          center:[116.391467, 39.927761],
+          center:props.lnglat,
           resizeEnable:true,
           zoom:15
         })
         // console.log(map);
         marker = new AMap.Marker({
-            position: [116.391467, 39.927761]
+            position: props.lnglat
         })
         map.add(marker);
         map.on('click', function(e) {
-          const data = getLngLat(e);
-          marker.setPosition(data.value);
-          emit('gnoteChange',data.value.join());
+          if(!props.disabled){
+            const data = getLngLat(e);
+            marker.setPosition(data.value);
+            emit('gnoteChange',data.value.join());
+          }
         });
       }).catch(e => {
           console.log(e);
       })
+
+      function mapDestory(){
+        map && map.destroy();
+      }
 
       const setMapCenter = (data)=>{
         // console.log(map);
@@ -44,7 +60,9 @@ export default {
       }
       return{
         // initAMap,
+        props,
         setMapCenter,
+        mapDestory,
       }
     }
 }
