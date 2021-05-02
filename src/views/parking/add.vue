@@ -8,9 +8,9 @@
     >
       <el-form-item
         label="停车场名称"
-        prop='name'
+        prop='parkingName'
       >
-        <el-input v-model="name"></el-input>
+        <el-input v-model="parkingName"></el-input>
       </el-form-item>
 
       <el-form-item
@@ -25,6 +25,13 @@
         />
       </el-form-item>
 
+      <el-form-item
+        label="详细地址"
+        prop='address'
+      >
+        <el-input v-model="address"></el-input>
+      </el-form-item>
+
       <el-form-item label="类型">
         <el-radio-group v-model="type">
           <el-radio
@@ -37,21 +44,21 @@
 
       <el-form-item
         label="可停放车辆"
-        prop='available'
+        prop='carsNumber'
       >
         <el-input
+          v-model="carsNumber"
           type='number'
-          v-model="available"
         ></el-input>
       </el-form-item>
 
       <el-form-item label="禁启用">
-        <el-radio-group v-model="disabled">
+        <el-radio-group v-model="status">
           <el-radio
-            v-for="status in parking_status"
-            :label="status.value"
-            :key="status.value"
-          >{{ status.label }}</el-radio>
+            v-for="state in parking_status"
+            :label="state.value"
+            :key="state.value"
+          >{{ state.label }}</el-radio>
         </el-radio-group>
       </el-form-item>
 
@@ -66,9 +73,9 @@
 
       <el-form-item
         label="经纬度"
-        prop='Gnote'
+        prop='lnglat'
       >
-        <el-input v-model="Gnote"></el-input>
+        <el-input v-model="lnglat"></el-input>
       </el-form-item>
 
       <el-form-item>
@@ -76,21 +83,23 @@
           type="primary"
           @click="onSubmit"
           :loading='loading'
-        >立即创建</el-button>
+        >{{button.Content}}</el-button>
       </el-form-item>
     </el-form>
   </div>
 </template>
 
 <script>
-import { reactive, ref, toRefs } from 'vue';
+import { onBeforeMount, onBeforeUnmount, reactive, ref, toRefs } from 'vue';
 import { useStore } from "vuex";
+import { useRoute,useRouter } from "vue-router";
+
 import Amap from "@/views/amap/index.vue";
 import { ElMessage  } from 'element-plus';
 
 import CityArea from '@/components/cascader/cityArea.vue';
 
-import { ParkingAdd } from "@/api/parking.js";
+import { ParkingAdd,ParkingDetailed,ParkingEdit } from "@/api/parking.js";
 
 export default {
     name:'ParkingAdd',
@@ -102,14 +111,26 @@ export default {
       const store = useStore();
       const parking_status = store.state.config.parking_status;
       const parking_type = store.state.config.parking_type;
+
+      const route = useRoute();
+      const router = useRouter();
+
+      const location = ref('');
+      const id = ref('');
+      id.value = route.query?.id;
       
+      const button = reactive({
+        Content:'立即创建',
+        Flag:'add',
+      })
       const forms = reactive({
-          name: '',
+          parkingName: '',
           area: '',
           type: 1,
-          available: 0,
-          disabled: 1,
-          Gnote: '',
+          carsNumber: 0,
+          status: 1,
+          lnglat: '',
+          address:'',
       })
       const form = toRefs(forms);
 
@@ -119,7 +140,7 @@ export default {
       const parking_form = ref('');
       const parkingadd_cascader = ref('');
       const rules = {
-        name:[
+        parkingName:[
           {
             required:true,
             message:'请输入停车场名称',
@@ -133,7 +154,14 @@ export default {
             trigger:'change',
           }
         ],
-        Gnote:[
+        address:[
+          {
+            required:true,
+            message:'请输入详细地址',
+            trigger:'blur',
+          }
+        ],
+        lnglat:[
           {
             required:true,
             message:'经纬度不能为空',
@@ -146,12 +174,13 @@ export default {
         form.area.value = val;
       }
       const gnoteChange=(val)=>{
-        form.Gnote.value = val;
+        form.lnglat.value = val;
       }
       const setMapCenter=(address)=>{
         // console.log(amap);
         amap.value.setMapCenter(address)
       }
+
       function parkingAdd(data){
         // console.log(data);
         loading.value = true;
@@ -165,25 +194,49 @@ export default {
         }).catch((err)=>{
           ElMessage({
             message: err.message,
-            type: "success",
+            type: "error",
           })
         }).finally(()=>{
           loading.value = false;
         })
-   
+      }
+      function parkingEdit(data){
+        // console.log(data);
+        loading.value = true;
+        data.id = id.value;
+        ParkingEdit(data).then(response=>{
+          ElMessage({
+            message: response.message,
+            type: "success",
+          })
+          // console.log(response);
+          reset();
+          router.push({
+            name:'ParkingList'
+          })
+        }).catch((err)=>{
+          ElMessage({
+            message: err.message,
+            type: "error",
+          })
+        }).finally(()=>{
+          loading.value = false;
+        })
       }
       const onSubmit =()=>{
         parking_form.value.validate((valid)=>{
           if(valid){
             const data ={
-              parkingName: forms.name,
+              parkingName: forms.parkingName,
               area: forms.area,
               type: forms.type,
-              carsNumber: forms.available,
-              status: forms.disabled ,
-              lnglat: forms.Gnote,  
+              carsNumber: forms.carsNumber,
+              status: forms.status ,
+              lnglat: forms.lnglat, 
+              address: forms.address, 
             }
-            parkingAdd(data);
+            console.log(data);
+            button.Flag === 'add'? parkingAdd(data): parkingEdit(data);
           }else{
             ElMessage({
             message: '请检查数据是否缺失或有误',
@@ -196,6 +249,39 @@ export default {
           parking_form.value.resetFields();
           parkingadd_cascader.value.clearCascader();
       }
+
+      function getDetaile(){
+        ParkingDetailed({id:id.value}).then((response)=>{
+          const data = response.data;
+          button.Content = '立即修改';
+          button.Flag = 'edit';
+          forms.parkingName = data.parkingName;
+          forms.area =data.area;
+          forms.type = data.type;
+          forms.carsNumber = data.carsNumber;
+          forms.status = data.status?1:2;
+          forms.lnglat = data.lnglat;
+          forms.address = data.address;
+          const [lng,lat] = data.lnglat.split(',');
+          amap.value.setLnglat(+lng,+lat)
+          parkingadd_cascader.value.setPlaceholder(data.region.replaceAll(/\,/g,' / '));
+        }).catch((err)=>{
+           ElMessage({
+            message: err.message,
+            type: "error",
+          })
+        })
+      }
+
+      onBeforeMount(()=>{
+        if(id.value){
+          getDetaile();
+        }
+      })
+
+      onBeforeUnmount(()=>{
+          amap.value.mapDestroy();
+      })
 
       return{
         forms,
@@ -211,6 +297,8 @@ export default {
         loading,
         parking_status,
         parking_type,
+        location,
+        button,
       }
     }
 }

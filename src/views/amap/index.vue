@@ -34,7 +34,6 @@ export default {
           resizeEnable:true,
           zoom:15
         })
-        // console.log(map);
         marker = new AMap.Marker({
             position: props.lnglat
         })
@@ -50,8 +49,13 @@ export default {
           console.log(e);
       })
 
-      function mapDestory(){
+      function mapDestroy(){
         map && map.destroy();
+      }
+
+      function setLnglat(lng,lat){
+        map.setCenter([lng, lat]);
+        marker.setPosition([lng, lat]);
       }
 
       const setMapCenter = (data)=>{
@@ -62,10 +66,11 @@ export default {
         // initAMap,
         props,
         setMapCenter,
-        mapDestory,
+        mapDestroy,
+        setLnglat,
       }
     }
 }
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 </style>

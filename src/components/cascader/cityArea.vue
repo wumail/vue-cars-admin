@@ -1,5 +1,7 @@
 <template>
   <el-cascader
+    :class="{'cascader-input':placeholderFlag}"
+    :placeholder='placeholder'
     v-model="area"
     :options="cascader_options"
     :props="cascader_props"
@@ -29,6 +31,8 @@ export default {
 
         const address = ref([]);
         const addressData = ref({});
+        const placeholder = ref('');
+        const placeholderFlag = ref(false);
         const cascader_props = reactive(
             {
             lazy: true,
@@ -84,13 +88,21 @@ export default {
         const clearCascader=()=>{
             area.value = [];
         }
+
+        const setPlaceholder = (val)=>{
+            placeholder.value = val;
+            placeholderFlag.value = true;
+        }
         return{
             cascader_options,
             cascader_props,
+            placeholder,
+            placeholderFlag,
             area,
             changeValue,
             getAddress,
             clearCascader,
+            setPlaceholder,
         }
     }
 }

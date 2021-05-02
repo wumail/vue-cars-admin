@@ -80,3 +80,10 @@ $color_nav_main:#f56c6c;
         }
     }
 }
+
+.cascader-input {
+    input::-webkit-input-placeholder { color:#606266; }
+    input:-moz-placeholder { color:#606266; }
+    input::-moz-placeholder { color:#606266; }
+    input:-ms-input-placeholder { color:#606266; }
+}

@@ -89,6 +89,7 @@
     <div class="table-form">
       <el-table
         :data="resource.tableData"
+        v-loading="loading"
         border
         style="width: 100%"
       >
@@ -108,6 +109,9 @@
           prop="type"
           label="类型"
         >
+          <template v-slot='scoped'>
+            {{scoped.row.type==='1'?'室内':'室外'}}
+          </template>
         </el-table-column>
 
         <el-table-column
@@ -154,16 +158,20 @@
         </el-table-column>
 
         <el-table-column label="操作">
-          <el-button
-            type="primary"
-            size="small"
-          >编辑</el-button>
-          <el-button
-            type="danger"
-            size="small"
-          >删除</el-button>
-
+          <template v-slot='scoped'>
+            <el-button
+              type="primary"
+              size="small"
+              @click="rowEdit(scoped.row.id)"
+            >编辑</el-button>
+            <el-button
+              type="danger"
+              size="small"
+              @click="rowDelete(scoped.row.id)"
+            >删除</el-button>
+          </template>
         </el-table-column>
+
       </el-table>
       <div>
         <el-row>
@@ -196,8 +204,10 @@
 <script>
 import { onBeforeMount, provide, reactive, ref, toRefs } from 'vue';
 import { useStore } from "vuex";
+import { useRouter } from "vue-router";
+import { ElMessage,ElMessageBox  } from 'element-plus';
 
-import { ParkingList } from "@/api/parking.js";
+import { ParkingList,ParkingDelete } from "@/api/parking.js";
 import CityArea from '@/components/cascader/cityArea.vue';
 import AmapDialog from "@/components/dialog/amapDialog.vue";
 
@@ -212,6 +222,8 @@ export default {
         const store = useStore();
         const parking_status = store.state.config.parking_status;
         const parking_type = store.state.config.parking_type;
+        //router
+        const router = useRouter();
         //子组件Ref
         const filterRef = ref('');
         const parkingadd_cascader = ref('');
@@ -238,6 +250,8 @@ export default {
           pageNumber:1,
         })
 
+        const loading = ref(false);
+
         //provider
         const dialogVisible = ref(false);
         provide('dialogVisible',dialogVisible);
@@ -248,6 +262,7 @@ export default {
         })
 
         const getDataResource = ()=>{
+          loading.value = true;
           const data={
             pageSize:resource.pageSize,
             pageNumber:resource.pageNumber,
@@ -265,6 +280,8 @@ export default {
               resource.tableData = reqdata.data;
               resource.total = reqdata.total
             }
+          }).finally(()=>{
+            loading.value = false;
           })
         }
 
@@ -295,9 +312,38 @@ export default {
         function amapDialog(row){
           dialogVisible.value=true;
           amapRef.value.setLnglat(row.lnglat);
-          amapRef.value.setTitle(row.parkingName);
+          amapRef.value.setTitle(row);
         }
 
+        function rowEdit(id){
+          router.push({
+            name:'ParkingAdd',
+            query:{
+              id
+            }
+          })
+        }
+        function rowDelete(id){
+          ElMessageBox.confirm('确定删除此信息','提示',{
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }).then(()=>{
+            ParkingDelete({id}).then((response)=>{
+              ElMessage({
+                message: response.message,
+                type: "success",
+              })
+              getDataResource();
+            }).catch((err)=>{
+              ElMessage({
+                message: err.message,
+                type: "error",
+              })
+            })
+          })
+          
+        }
         return{
             filter,
             filterRef,
@@ -314,7 +360,9 @@ export default {
             reset,
             amapDialog,
             amapRef,
-
+            rowEdit,
+            rowDelete,
+            loading,
         }
     }
 }

@@ -9,6 +9,7 @@
       destroy-on-close
       center
     >
+      <h4 class="address-content">{{content}}</h4>
       <div class="address-map">
         <Amap
           :lnglat='lnglat'
@@ -35,20 +36,23 @@ export default {
         const lnglat = ref('');
         const amap = ref('');
         const title = ref('');
+        const content = ref('');
         const dialogVisible = inject('dialogVisible');
         const close = ()=>{
             inject('dialogVisible',false);
         }
         const onclosed = ()=>{
-            amap.value.mapDestory();
+            amap.value.mapDestroy();
         }
         const disabled = ref(true);
+
         function setLnglat(val){
             const [lng,lat] = val.split(',');
             lnglat.value = [+lng,+lat];
         }
         function setTitle(val){
-            title.value =`${val}的详细位置`;
+            title.value =`  ${val.parkingName}  的详细位置`;
+            content.value = `${val.address}`;
         }
         return{
             props,
@@ -60,6 +64,7 @@ export default {
             setLnglat,
             onclosed,
             title,
+            content,
             setTitle,
         }
     }
@@ -68,6 +73,11 @@ export default {
 
 <style lang="scss" scoped>
 .cars-dialog {
+  .address-content {
+    text-align: center;
+    margin-bottom: 10px;
+    opacity: 0.8;
+  }
   .address-map {
     width: 100%;
     height: 400px;
