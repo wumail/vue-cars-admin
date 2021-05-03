@@ -87,91 +87,151 @@
         </el-col>
       </el-row>
     </div>
-
     <div class="table-form">
-      <TableCmp
-        :config='tableConfig'
-        ref="tableRef"
+      <el-table
+        :data="resource.tableData"
+        v-loading="loading"
+        border
+        style="width: 100%"
       >
-        <template #table_status='slotdata'>
-          <el-switch
-            :loading='switchLoading'
-            @change="changeStatus(slotdata.data)"
-            v-model="slotdata.data.status"
-            :active-value='false'
-            :inactive-value='true'
-            active-color="#13ce66"
-            inactive-color="#ff4949"
-          ></el-switch>
-        </template>
+        <el-table-column
+          type="selection"
+          width="40"
+        >
+        </el-table-column>
 
-        <template #table_lnglat='slotdata'>
-          <el-button
-            v-model="slotdata.data.lnglat"
-            size="small"
-            plain
-            @click='amapDialog(slotdata.data)'
-          >查看地图</el-button>
-        </template>
+        <el-table-column
+          prop="parkingName"
+          label="停车场名称"
+        >
+        </el-table-column>
 
-        <template #table_option='slotdata'>
-          <el-button
-            type="primary"
-            size="small"
-            plain
-            @click="rowEdit(slotdata.data.id)"
-          >编辑</el-button>
-          <el-button
-            :loading='deleteLoading'
-            type="danger"
-            size="small"
-            plain
-            @click="rowDelete(slotdata.data.id)"
-          >删除</el-button>
-        </template>
-      </TableCmp>
+        <el-table-column
+          prop="type"
+          label="类型"
+        >
+          <template v-slot='scoped'>
+            {{scoped.row.type==='1'?'室内':'室外'}}
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="address"
+          label="区域"
+        >
+        </el-table-column>
+
+        <el-table-column
+          prop="carsNumber"
+          label="可停放车辆"
+        >
+        </el-table-column>
+
+        <el-table-column
+          prop="status"
+          label="禁启用"
+        >
+          <template v-slot='scoped'>
+            <el-switch
+              v-model="scoped.row.status"
+              :active-value='false'
+              :inactive-value='true'
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+            >
+            </el-switch>
+          </template>
+
+        </el-table-column>
+
+        <el-table-column
+          prop="lnglat"
+          label="查看位置"
+        >
+          <template v-slot='scoped'>
+            <el-button
+              v-model="scoped.row.lnglat"
+              size="small"
+              plain
+              @click='amapDialog(scoped.row)'
+            >查看</el-button>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作">
+          <template v-slot='scoped'>
+            <el-button
+              type="primary"
+              size="small"
+              plain
+              @click="rowEdit(scoped.row.id)"
+            >编辑</el-button>
+            <el-button
+              type="danger"
+              size="small"
+              plain
+              @click="rowDelete(scoped.row.id)"
+            >删除</el-button>
+          </template>
+        </el-table-column>
+
+      </el-table>
+      <div>
+        <el-row>
+          <el-col :span="12"></el-col>
+          <el-col
+            :span="12"
+            style="margin-top:10px"
+          >
+            <span class="demonstration"></span>
+            <el-pagination
+              class="pull-right"
+              background
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="resource.current_page"
+              :page-sizes="[10, 20, 50]"
+              :page-size="10"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="resource.total"
+            >
+            </el-pagination>
+          </el-col>
+        </el-row>
+      </div>
     </div>
     <AmapDialog ref='amapRef' />
   </div>
 </template>
 
 <script>
-import { provide, reactive, ref, toRefs } from 'vue';
+import { onBeforeMount, provide, reactive, ref, toRefs } from 'vue';
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { ElMessage,ElMessageBox  } from 'element-plus';
 
-import { ParkingStatus } from "@/api/parking.js";
-import { Delete } from "@/api/common.js";
+import { ParkingList,ParkingDelete } from "@/api/parking.js";
 import CityArea from '@/components/cascader/cityArea.vue';
 import AmapDialog from "@/components/dialog/amapDialog.vue";
-import TableCmp from "@/components/table/index.vue";
-
 
 export default {
     name:'Parking',
     components:{
       CityArea,
       AmapDialog,
-      TableCmp,
     },
     setup(){
         //store
         const store = useStore();
         const parking_status = store.state.config.parking_status;
         const parking_type = store.state.config.parking_type;
-        provide('parking_Status',parking_status)
-        provide('parking_Type',parking_type)
         //router
         const router = useRouter();
         //子组件Ref
         const filterRef = ref('');
         const parkingadd_cascader = ref('');
         const amapRef = ref('');
-        const tableRef = ref('');
         //ref
-        const switchLoading = ref(false);
-        const deleteLoading = ref(false);
         //filter
         const filter = reactive( {
           parkingName: '',
@@ -183,77 +243,73 @@ export default {
         //cascader
         const props = reactive({ expandTrigger: 'hover' })
         const value = reactive([])
-        //table
-        const tableConfig ={
-          thead:[
-            {
-              label:'停车场名称',prop:'parkingName'
-            },
-            {
-              label:'类型',prop:'type',
-              type:'callback',
-              callback:(row,prop)=>{
-                const data = parking_type.filter(item => item.value == row[prop]);
-                if(data && data.length > 0){
-                  return data[0].label;
-                }
-              }
-            },
-            {
-              label:'区域',prop:'address',
-              type:'callback',
-              callback:(row,prop)=>{
-                return row[prop]?row[prop].split(',').join('<br/>'):'';
-              }
-            },
-            {
-              label:'可停放车辆',prop:'carsNumber'
-            },
-            {
-              label:'禁启用',prop:'status',
-              type:'slot',
-              slot:'table_status',
-            },
-            {
-              label:'查看位置',prop:'lnglat',
-              type:'slot',
-              slot:'table_lnglat',
-            },
-            {
-              label:'操作',
-              type:'slot',
-              slot:'table_option',
-            },
-          ],
-          checkbox:true,
-          url:'parkingList',
-          pagination:{
-                flag:true,
-                pageSize:10,
-                pageNumber:1,
-          },
-        };
+
+        //data resource
+        const resource = reactive({
+          tableData:[],
+          total:0,
+          current_page:1,
+          pageSize:10,
+          pageNumber:1,
+        })
+
+        const loading = ref(false);
+
         //provider
         const dialogVisible = ref(false);
         provide('dialogVisible',dialogVisible);
         provide('lnglat',dialogVisible);
 
-        // onBeforeMount(()=>{
-        //   getDataResource()
-        // })
+        onBeforeMount(()=>{
+          getDataResource()
+        })
+
+        const getDataResource = ()=>{
+          loading.value = true;
+          const data={
+            pageSize:resource.pageSize,
+            pageNumber:resource.pageNumber,
+          }
+          for (const key in filters) {
+            let value = eval("filters."+key)
+            if(value.value){
+              data[`${key}`] = value.value;
+            }
+          }
+          ParkingList(data).then((response)=>{
+            const reqdata = response.data;
+              console.log(reqdata);
+            if(reqdata){
+              resource.tableData = reqdata.data;
+              resource.total = reqdata.total
+            }
+          }).finally(()=>{
+            loading.value = false;
+          })
+        }
 
         const areaChange = (val)=>{
           filter.area = val;
         }
 
+        function handleSizeChange(val){
+          resource.pageSize = val;
+          getDataResource();
+        }
+
+        function handleCurrentChange(val){
+          resource.current_page=val;
+          getDataResource();
+        }
+
         function search(){
-          tableRef.value.filterTableResource(filters);
+          getDataResource();
         }
 
         function reset(){
           filterRef.value.resetFields();
           parkingadd_cascader.value.clearCascader();
-          tableRef.value.filterTableResource(filters);
+          getDataResource();
         }
 
         function amapDialog(row){
@@ -271,31 +327,25 @@ export default {
           })
         }
         function rowDelete(id){
-          deleteLoading.value = true;
-          tableRef.value.tableDelete(id,deleteLoading).catch(()=>{
-            deleteLoading.value = false;
-          })
-        }
-
-        function changeStatus(data){
-          switchLoading.value= false;
-          const request = {
-            id:data.id,
-            status:data.id
-          }
-          ParkingStatus(request).then((response)=>{
-            ElMessage({
+          ElMessageBox.confirm('确定删除此信息','提示',{
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }).then(()=>{
+            ParkingDelete({id}).then((response)=>{
+              ElMessage({
                 message: response.message,
                 type: "success",
               })
-          }).catch((err)=>{
+              getDataResource();
+            }).catch((err)=>{
               ElMessage({
                 message: err.message,
                 type: "error",
               })
-          }).finally(()=>{
-            switchLoading.value= true;
+            })
           })
+          
         }
         return{
             filter,
@@ -303,6 +353,9 @@ export default {
             parkingadd_cascader,
             props,
             value,
+            resource,
+            handleSizeChange,
+            handleCurrentChange,
             areaChange,
             parking_status,
             parking_type,
@@ -310,13 +363,9 @@ export default {
             reset,
             amapDialog,
             amapRef,
-            tableRef,
             rowEdit,
             rowDelete,
-            tableConfig,
-            changeStatus,
-            switchLoading,
-            deleteLoading,
+            loading,
         }
     }
 }
