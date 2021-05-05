@@ -1,5 +1,6 @@
 <template>
   <div class="cars-add">
+
     <el-form
       ref="form"
       label-width="100px"
@@ -174,9 +175,13 @@
 
 <script>
 import { onMounted, reactive, ref,toRefs } from 'vue'
+
 import WangEditor  from 'wangeditor'
 export default {
     name:'CarsAdd',
+    components:{
+      
+    },
     setup(){
       const editor = ref();
       let instance = null;
@@ -193,8 +198,21 @@ export default {
           gear:'manual',
           disabled:'禁用',
       })
-
       const form = toRefs(forms);
+
+      const formItems =reactive(
+        [
+          {
+            type:'input',label:'停车场名称',placeholder:'请输入停车场名称',
+            prop:'parkingName',width:'250px'
+          },
+          {
+            type:'slot',slot:'CityArea',label:'区域',
+            prop:'area'
+          },
+        ]
+      )
+      
       
       const domains = reactive(
         [  
@@ -241,10 +259,11 @@ export default {
     //       console.log(energy.value);
     //   }
 
-    onMounted(()=>{
+      onMounted(()=>{
       instance = new WangEditor(editor.value);
       instance.create() 
     })
+      
       return{
         ...form,
         progressColors,
@@ -254,6 +273,7 @@ export default {
         addDomain,
         domains,
         editor,
+        formItems,
         // energy,
         // annual,
       }

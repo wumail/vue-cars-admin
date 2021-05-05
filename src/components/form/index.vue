@@ -1,0 +1,105 @@
+<template>
+  <el-form
+    ref="formRef"
+    :rules='formConfig.rules'
+    :model='formConfig.forms'
+    label-width="100px"
+  >
+    <el-form-item
+      v-for="item in formItem"
+      :key="item.prop"
+      :label='item.label'
+      :prop='item.prop'
+    >
+      <!--input-->
+      <el-input
+        v-if="item.type === 'input'"
+        :placeholder='item.placeholder'
+        :style="{width:item.width}"
+        v-model='forms[item.prop]'
+        :type="item.input_type?item.input_type:''"
+        :disabled='item.disabled'
+      >
+      </el-input>
+      <!--slot-->
+      <slot
+        v-if="item.type === 'slot'"
+        :name='item.slot'
+      ></slot>
+      <!--radio-->
+      <el-radio-group
+        v-if="item.type === 'radio'"
+        v-model='forms[item.prop]'
+      >
+        <el-radio
+          v-for='radio in item.options'
+          :key="radio.value"
+          :label='radio.value'
+        >{{radio.label}}</el-radio>
+      </el-radio-group>
+      <!--button-->
+
+    </el-form-item>
+  </el-form>
+</template>
+
+<script>
+import { onBeforeMount, reactive, ref, toRefs } from 'vue'
+export default {
+    name:'Form',
+    props:{
+        formItem:{
+            type:Array,
+            default:()=>{}
+        },
+        formModel:{
+            type:Object,
+            default:()=>{}
+        },
+        rules:{
+            type:Object,
+            default:()=>{}
+        },
+    },
+    components:{
+        
+    },
+    setup(props){
+        const formConfig = reactive(
+            {
+                rules:{
+                },
+                forms:{
+                },
+            }
+        )
+        const formRef = ref('')
+        const formConfigs = toRefs(formConfig)
+        function initForm(){
+            formConfig.forms = props.formModel;
+            formConfig.rules = props.rules;
+        }
+
+        initForm();
+
+        function resetForm(){
+            formRef.value.resetFields();
+        }
+
+        async function formValidate(){
+            return formRef.value.validate()
+        }
+
+        return{
+            formConfig,
+            ...formConfigs,
+            formRef,
+            resetForm,
+            formValidate,
+        }
+    }
+}
+</script>
+
+<style lang="scss" scoped>
+</style>

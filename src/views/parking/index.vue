@@ -278,10 +278,10 @@ export default {
         }
 
         function changeStatus(data){
-          switchLoading.value= false;
+          switchLoading.value= true;
           const request = {
             id:data.id,
-            status:data.id
+            status:data.status
           }
           ParkingStatus(request).then((response)=>{
             ElMessage({
@@ -294,7 +294,7 @@ export default {
                 type: "error",
               })
           }).finally(()=>{
-            switchLoading.value= true;
+            switchLoading.value= false;
           })
         }
         return{
@@ -321,7 +321,7 @@ export default {
     }
 }
 </script>
-<style lang="scss" scoped>
+<style lang="scss" >
 .filter-form {
   display: block;
   text-align: left;

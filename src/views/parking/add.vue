@@ -1,91 +1,36 @@
 <template>
   <div class="parking-add">
-    <el-form
-      :model='forms'
+    <FormCmp
+      :formItem='formItems'
+      :formModel='forms'
       :rules='rules'
-      ref="parking_form"
+      ref="formCmpRef"
       label-width="100px"
     >
-      <el-form-item
-        label="停车场名称"
-        prop='parkingName'
-      >
-        <el-input v-model="parkingName"></el-input>
-      </el-form-item>
-
-      <el-form-item
-        label="区域"
-        prop='area'
-      >
+      <template #CityArea>
         <CityArea
           ref="parkingadd_cascader"
           :areavalue='area'
           @areaChange='areaChange'
           @setMapCenter='setMapCenter'
         />
-      </el-form-item>
-
-      <el-form-item
-        label="详细地址"
-        prop='address'
-      >
-        <el-input v-model="address"></el-input>
-      </el-form-item>
-
-      <el-form-item label="类型">
-        <el-radio-group v-model="type">
-          <el-radio
-            v-for="type in parking_type"
-            :label="type.value"
-            :key="type.value"
-          >{{ type.label }}</el-radio>
-        </el-radio-group>
-      </el-form-item>
-
-      <el-form-item
-        label="可停放车辆"
-        prop='carsNumber'
-      >
-        <el-input
-          v-model="carsNumber"
-          type='number'
-        ></el-input>
-      </el-form-item>
-
-      <el-form-item label="禁启用">
-        <el-radio-group v-model="status">
-          <el-radio
-            v-for="state in parking_status"
-            :label="state.value"
-            :key="state.value"
-          >{{ state.label }}</el-radio>
-        </el-radio-group>
-      </el-form-item>
-
-      <el-form-item label="位置">
+      </template>
+      <template #Amap>
         <div class="address-map">
           <Amap
             ref="amap"
             @gnoteChange='gnoteChange'
           />
         </div>
-      </el-form-item>
-
-      <el-form-item
-        label="经纬度"
-        prop='lnglat'
-      >
-        <el-input v-model="lnglat"></el-input>
-      </el-form-item>
-
-      <el-form-item>
+      </template>
+      <template #Button>
         <el-button
           type="primary"
           @click="onSubmit"
           :loading='loading'
         >{{button.Content}}</el-button>
-      </el-form-item>
-    </el-form>
+      </template>
+    </FormCmp>
   </div>
 </template>
 
@@ -98,6 +43,8 @@ import Amap from "@/views/amap/index.vue";
 import { ElMessage  } from 'element-plus';
 
 import CityArea from '@/components/cascader/cityArea.vue';
+import FormCmp from "@/components/form/index.vue";
+
 
 import { ParkingAdd,ParkingDetailed,ParkingEdit } from "@/api/parking.js";
 
@@ -106,6 +53,7 @@ export default {
     components:{ 
       Amap,
       CityArea,
+      FormCmp,
     },
     setup(){
       const store = useStore();
@@ -114,15 +62,20 @@ export default {
 
       const route = useRoute();
       const router = useRouter();
-
-      const location = ref('');
       const id = ref('');
       id.value = route.query?.id;
-      
+
+      let amap = ref('');
+      let loading = ref(false);
+    
+      const formCmpRef = ref('');
+      const parkingadd_cascader = ref('');
+
       const button = reactive({
         Content:'立即创建',
         Flag:'add',
       })
+      
       const forms = reactive({
           parkingName: '',
           area: '',
@@ -133,12 +86,46 @@ export default {
           address:'',
       })
       const form = toRefs(forms);
+    
+      const formItems =reactive(
+        [
+          {
+            type:'input',label:'停车场名称',placeholder:'请输入停车场名称',
+            prop:'parkingName'
+          },
+          {
+            type:'slot',slot:'CityArea',label:'区域',
+            prop:'area'
+          },
+          {
+            type:'input',label:'详细地址',placeholder:'请输入详细地址',
+            prop:'address'
+          },
+          {
+            type:'radio',label:'类型',
+            prop:'type',options:parking_type,
+          },
+          {
+            type:'input',input_type:'number',label:'可停放车辆',placeholder:'可停放车辆数量',
+            prop:'carsNumber'
+          },
+          {
+            type:'radio',label:'禁启用',
+            prop:'status',options:parking_status,
+          },
+          {
+            type:'slot',slot:'Amap',label:'位置',
+          },
+          {
+            type:'input',label:'经纬度',
+            prop:'lnglat',disabled:true,
+          },
+          {
+            type:'slot',slot:'Button'
+          },
+        ]
+      )
 
-      let amap = ref('');
-      let loading = ref(false);
-
-      const parking_form = ref('');
-      const parkingadd_cascader = ref('');
       const rules = {
         parkingName:[
           {
@@ -223,9 +210,9 @@ export default {
           loading.value = false;
         })
       }
+
       const onSubmit =()=>{
-        parking_form.value.validate((valid)=>{
-          if(valid){
+        formCmpRef.value.formValidate().then(()=>{
             const data ={
               parkingName: forms.parkingName,
               area: forms.area,
@@ -235,18 +222,18 @@ export default {
               lnglat: forms.lnglat, 
               address: forms.address, 
             }
-            console.log(data);
+            // console.log(data);
             button.Flag === 'add'? parkingAdd(data): parkingEdit(data);
-          }else{
-            ElMessage({
+        }).catch(()=>{
+          ElMessage({
             message: '请检查数据是否缺失或有误',
             type: "error",
           })
-          }
         })
       }
+
       const reset = ()=>{
-          parking_form.value.resetFields();
+          formCmpRef.value.resetForm();
           parkingadd_cascader.value.clearCascader();
       }
 
@@ -286,25 +273,25 @@ export default {
       return{
         forms,
         ...form,
+        formItems,
         areaChange,
         gnoteChange,
         setMapCenter,
         amap,
         onSubmit,
-        parking_form,
         rules,
         parkingadd_cascader,
         loading,
         parking_status,
         parking_type,
-        location,
         button,
+        formCmpRef,
       }
     }
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .parking-add {
   .el-form-item {
     display: block;

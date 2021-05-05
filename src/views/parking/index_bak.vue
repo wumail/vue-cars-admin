@@ -370,7 +370,7 @@ export default {
     }
 }
 </script>
-<style lang="scss" scoped>
+<style lang="scss" >
 .filter-form {
   display: block;
   text-align: left;

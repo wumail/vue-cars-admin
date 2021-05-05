@@ -4,6 +4,7 @@
       border
       style="width: 100%"
       v-loading="loading"
+      element-loading-text='加载中！'
       :data='resource.tableData'
     >
       <el-table-column
@@ -36,6 +37,22 @@
               :name='item.slot'
               :data='scoped.row'
             ></slot>
+          </template>
+        </el-table-column>
+        <!--image-->
+        <el-table-column
+          v-else-if="item.type === 'image'"
+          :key="item.prop"
+          :prop='item.prop'
+          :label='item.label'
+          :width='item.columnWidth'
+        >
+          <template v-slot='scoped'>
+            <img
+              :src="scoped.row.imgUrl"
+              :alt="scoped.row.imgUrl"
+              :width='item.imgWidth || 50'
+            >
           </template>
         </el-table-column>
         <!--normal-->
@@ -151,11 +168,15 @@ export default {
         function filterTableResource(params){
             filter={};
             for (const key in params) {
+                // console.log(key);
                 let value = eval("params."+key)
+                // console.log(value);
                 if(value.value){
                     filter[`${key}`] = value.value;
+                    // console.log(111);
                 }
             }
+            // console.log(filter);
             loadTableResource();
         }
 

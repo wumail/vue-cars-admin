@@ -45,9 +45,11 @@ $color_nav_main:#f56c6c;
     }
 }
 
+
 .upload-img-wrap {
     display: flex;
     .upload-img{
+        position: relative;
         background-color: #fbfdff;
         border: 1px dashed #c0ccda;
         border-radius: 6px;
@@ -64,10 +66,18 @@ $color_nav_main:#f56c6c;
             font-weight: 300;
             color: #ccc;
         }
+        img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
     }
     .img-list{
         display: flex;
         flex:1;
+        flex-wrap: wrap;
         padding-left: 30px;
         li{
             img{
