@@ -10,6 +10,7 @@
       :key="item.prop"
       :label='item.label'
       :prop='item.prop'
+      :label-width='item.label_width'
     >
       <!--input-->
       <el-input
@@ -37,7 +38,20 @@
           :label='radio.value'
         >{{radio.label}}</el-radio>
       </el-radio-group>
-      <!--button-->
+      <!--select-->
+      <el-select
+        v-if="item.type === 'select'"
+        :placeholder='item.placeholder'
+        :style="{width:item.width}"
+        v-model='forms[item.prop]'
+      >
+        <el-option
+          v-for="option in item.options"
+          :key="option.id"
+          :value='option.id'
+          :label='option.value'
+        ></el-option>
+      </el-select>
 
     </el-form-item>
   </el-form>
@@ -101,5 +115,5 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 </style>
