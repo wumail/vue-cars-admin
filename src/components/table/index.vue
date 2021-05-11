@@ -20,6 +20,7 @@
           :key="item.prop"
           :prop='item.prop'
           :label='item.label'
+          :width='item.columnWidth'
         >
           <template v-slot='scoped'>
             <span v-html="item.callback && item.callback(scoped.row,item.prop)"></span>
@@ -31,6 +32,7 @@
           :key="item.prop"
           :prop='item.prop'
           :label='item.label'
+          :width='item.columnWidth'
         >
           <template v-slot='scoped'>
             <slot
@@ -49,7 +51,7 @@
         >
           <template v-slot='scoped'>
             <img
-              :src="scoped.row.imgUrl"
+              :src="scoped.row[item.prop]"
               :alt="scoped.row.imgUrl"
               :width='item.imgWidth || 50'
             >
@@ -61,6 +63,7 @@
           :key="item.prop"
           :prop='item.prop'
           :label='item.label'
+          :width='item.columnWidth'
         ></el-table-column>
       </template>
     </el-table>
@@ -152,7 +155,8 @@ export default {
                 }
             }
             GetTableData(params).then((response)=>{
-                const reqdata = response.data;
+              const reqdata = response.data;
+              console.log(response);
                 if(reqdata){
                     resource.tableData = reqdata.data;
                     resource.total = reqdata.total

@@ -3,7 +3,6 @@
     <FormCmp
       :formItem='formItems'
       :formModel='forms'
-      :rules='rules'
       ref="formCmpRef"
       label-width="100px"
     >
@@ -22,9 +21,11 @@
       <template #Energy>
         <el-form-item>
           <el-radio-group v-model="forms.energyType">
-            <el-radio :label="1">油</el-radio>
-            <el-radio :label="2">电</el-radio>
-            <el-radio :label="3">混合</el-radio>
+            <el-radio
+              v-for="item in energyType"
+              :key="item.value"
+              :label="item.value"
+            >{{item.label}}</el-radio>
           </el-radio-group>
           <div class="energy-progress">
             <div
@@ -286,13 +287,14 @@
 <script>
 import { onBeforeMount, onMounted, reactive, ref,toRefs } from 'vue'
 import { useStore } from 'vuex';
+import { useRoute,useRouter } from "vue-router";
 import WangEditor  from 'wangeditor'
 import dayjs from 'dayjs'
 import { ElMessage  } from 'element-plus';
 
 import FormCmp from "@/components/form/index.vue";
 import { GetCarsBrand,GetParking } from "@/api/common.js";
-import { CarsAdd } from "@/api/car.js";
+import { CarsAdd,CarsDetailed,CarsEdit } from "@/api/car.js";
 
 
 export default {
@@ -303,26 +305,17 @@ export default {
     setup(){
       const editor = ref();
       let instance = null;
-      // const forms = reactive({
-      //     brand: '',
-      //     parking: '',
-      //     modle: '',
-      //     carsnum1: '',
-      //     carsnum2: '',
-      //     carsnum3: '',
-      //     date:'',
-      //     energy:1,
-      //     annual:'have',
-      //     gear:'manual',
-      //     disabled:'禁用',
-      // })
-      // const form = toRefs(forms);
 
       const store = useStore();
       const year_check = store.state.config.year_check;
       const gear = store.state.config.gear;
       const energyType = store.state.config.energyType;
       const radio_disabled = store.state.config.radio_disabled;
+
+      const route = useRoute();
+      const router = useRouter();
+      const id = ref('');
+      id.value = route.query?.id;
       let loading = ref(false);
 
       const button = reactive({
@@ -343,55 +336,90 @@ export default {
         [
           {
             type:'select',label:'车辆品牌',placeholder:'请选择车辆品牌',width:'250px',
-            prop:'carsBrandId',options:[]
+            prop:'carsBrandId',options:[],filterable:true,
+            rules:{
+              required:true,
+              message:'请选择车辆品牌',
+              trigger:'blur',
+            }
           },
           {
             type:'select',label:'停车场',placeholder:'请选择停车场',width:'250px',
-            prop:'parkingId',options:[]
+            prop:'parkingId',options:[],filterable:true,
+            rules:{
+              required:true,
+              message:'请选择停车场',
+              trigger:'blur',
+            }
           },
           {
             type:'input',label:'车辆型号',placeholder:'请输入车辆型号',
-            prop:'carsMode',width:'250px'
+            prop:'carsMode',width:'250px',
+            rules:{
+              required:true,
+              message:'请输入车辆型号',
+              trigger:'blur',
+            }
           },
           {
             type:'input',label:'车牌号',placeholder:'请输入车牌号',
-            prop:'carsNumber',width:'250px'
+            prop:'carsNumber',width:'250px',
+            rules:{
+              required:true,
+              message:'请输入车牌号',
+              trigger:'blur',
+            }
           },
           {
             type:'input',label:'车架号',placeholder:'请输入车架号',
-            prop:'carsFrameNumber',width:'250px'
+            prop:'carsFrameNumber',width:'250px',
+            rules:{
+              required:true,
+              message:'请输入车架号',
+              trigger:'blur',
+            }
           },
           {
             type:'input',label:'发动机号',placeholder:'请输入发动机号',
-            prop:'engineNumber',width:'250px'
+            prop:'engineNumber',width:'250px',
+            rules:{
+              required:true,
+              message:'请输入发动机号',
+              trigger:'blur',
+            }
           },
           {
             type:'radio',label:'年检',
-            prop:'yearCheck',options:year_check
+            prop:'yearCheck',options:year_check,
           },
           {
             type:'slot',slot:'Date',label:'保养日期',
             prop:'maintainDate',
+            rules:{
+              required:true,
+              message:'请选择保养日期',
+              trigger:'blur',
+            }
           },
           {
             type:'radio',label:'挡位',
-            prop:'gear',options:gear
+            prop:'gear',options:gear,
           },
           {
             type:'slot',slot:'Energy',label:'能源类型',
-            prop:'energyType'
+            prop:'energyType',
           },
           {
             type:'radio',label:'禁启用',
-            prop:'status',options:radio_disabled
+            prop:'status',options:radio_disabled,
           },
           {
             type:'slot',slot:'CarsAttr',label:'车辆属性',
-            prop:'carsAttr'
+            prop:'carsAttr',
           },
           { 
             type:'slot',slot:'WangEditor',label:'描述',
-            prop:'content'
+            prop:'content',
           },
           {
             type:'slot',slot:'Button'
@@ -408,20 +436,20 @@ export default {
           carsNumber:'',
           carsFrameNumber:'',
           engineNumber:'',
-          yearCheck:true,
+          yearCheck:false,
           maintainDate:'',
-          gear:true,
-          energyType:'',
+          gear:1,
+          energyType:1,
           electric:0,
           oil:0,
-          status:true,
+          status:false,
           carsAttr:{},
           content:'',
         }
       )
       const formCmpRef =ref('');
 
-      const domains = reactive([])
+      let domains = reactive([])
       const removeDomain =(item)=> {
         var index = domains.indexOf(item)
         if (index !== -1) {
@@ -495,12 +523,36 @@ export default {
       
       function  addCars() {
         loading.value = true;
-        CarsAdd().then((response)=>[
+        CarsAdd(forms).then((response)=>{
           ElMessage({
             message: response.message,
             type: "success",
+          }),
+          reset()
+        }).catch((err)=>{
+          ElMessage({
+            message: err.message,
+            type: "error",
+          })  
+        }).finally(()=>{
+          loading.value = false;
+        })
+      }
+
+      function editCars() {
+        loading.value = true;
+        const data = forms;
+        data.id = id.value;
+        CarsEdit(data).then((response)=>{
+          ElMessage({
+            message: response.message,
+            type: "success",
+          }),
+          reset()
+          router.push({
+            name:'CarsList'
           })
-        ]).catch((err)=>{
+        }).catch((err)=>{
           ElMessage({
             message: err.message,
             type: "error",
@@ -522,14 +574,81 @@ export default {
 
       function onSubmit() {
         formatDomains()
-        addCars(forms)
-        // console.log(domains);
-        console.log(forms);
+        formCmpRef.value.formValidate().then(()=>{
+            // console.log(data);
+            button.Flag === 'add'?addCars():editCars()
+        }).catch(()=>{
+          ElMessage({
+            message: '请检查数据是否缺失或有误',
+            type: "error",
+          })
+        })
+      }
+
+      function getDetaile(){
+        CarsDetailed({id:id.value}).then((response)=>{
+          const data = response.data;
+          console.log(data);
+          button.Content = '立即修改';
+          button.Flag = 'edit';
+          forms.carsBrandId=data.carsBrandId;
+          forms.parkingId=data.parkingId;
+          forms.carsMode=data.carsMode;
+          forms.carsNumber=data.carsNumber;
+          forms.carsFrameNumber=data.carsFrameNumber;
+          forms.engineNumber=data.engineNumber;
+          forms.yearCheck=data.yearCheck;
+          forms.maintainDate=data.maintainDate;
+          forms.gear=data.gear;
+          forms.energyType=data.energyType;
+          forms.electric=data.electric;
+          forms.oil=data.oil;
+          forms.status=data.status;
+          forms.carsAttr=data.carsAttr;
+          if(data.carsAttr){
+            const parseData = JSON.parse(data.carsAttr)
+            for (const key in parseData) {
+              domains.push({
+                attr_key: key,
+                attr_value: parseData[key],
+                key: Date.now()
+              })
+            }
+            console.log(domains);
+          }
+          // domains = data.carsAttr;
+          forms.content=data.content;
+          instance.txt.html(data.content)
+        }).catch((err)=>{
+           ElMessage({
+            message: err.message,
+            type: "error",
+          })
+        })
       }
 
       function formatDate() {
         forms.maintainDate = dayjs(forms.maintainDate).format('YYYY-MM-DD')
       }
+
+      function reset() {
+        formCmpRef.value.resetForm()
+        forms.energyType=1;
+        forms.electric=0;
+        forms.oil=0;
+        forms.carsAttr={};
+        forms.content='';
+        domains.length = 0;
+        instance.txt.clear()
+        button.Flag='add';
+        button.Content ='立即创建'
+      }
+
+      onBeforeMount(()=>{
+        if(id.value){
+          getDetaile();
+        }
+      })
       
       return{
         forms,
@@ -544,7 +663,8 @@ export default {
         button,
         loading,
         onSubmit,
-        formatDate
+        formatDate,
+        energyType
       }
     }
 }

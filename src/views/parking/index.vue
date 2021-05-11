@@ -98,8 +98,8 @@
             :loading='switchLoading'
             @change="changeStatus(slotdata.data)"
             v-model="slotdata.data.status"
-            :active-value='false'
-            :inactive-value='true'
+            :active-value='true'
+            :inactive-value='false'
             active-color="#13ce66"
             inactive-color="#ff4949"
           ></el-switch>

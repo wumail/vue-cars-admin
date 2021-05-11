@@ -3,7 +3,6 @@
     <FormCmp
       :formItem='formItems'
       :formModel='forms'
-      :rules='rules'
       ref="formCmpRef"
       label-width="100px"
     >
@@ -91,15 +90,30 @@ export default {
         [
           {
             type:'input',label:'停车场名称',placeholder:'请输入停车场名称',
-            prop:'parkingName'
+            prop:'parkingName',
+            rules:{
+              required:true,
+              message:'请输入停车场名称',
+              trigger:'blur',
+            }
           },
           {
             type:'slot',slot:'CityArea',label:'区域',
-            prop:'area'
+            prop:'area',
+            rules:{
+              required:true,
+              message:'请选择省市区',
+              trigger:'change',
+            }
           },
           {
             type:'input',label:'详细地址',placeholder:'请输入详细地址',
-            prop:'address'
+            prop:'address',
+            rules:{
+              required:true,
+              message:'请输入详细地址',
+              trigger:'blur',
+            }
           },
           {
             type:'radio',label:'类型',
@@ -119,6 +133,11 @@ export default {
           {
             type:'input',label:'经纬度',
             prop:'lnglat',disabled:true,
+            rules:{
+              required:true,
+              message:'经纬度不能为空',
+              trigger:'change',
+            }
           },
           {
             type:'slot',slot:'Button'
@@ -126,36 +145,6 @@ export default {
         ]
       )
 
-      const rules = {
-        parkingName:[
-          {
-            required:true,
-            message:'请输入停车场名称',
-            trigger:'blur',
-          }
-        ],
-        area:[
-          {
-            required:true,
-            message:'请选择省市区',
-            trigger:'change',
-          }
-        ],
-        address:[
-          {
-            required:true,
-            message:'请输入详细地址',
-            trigger:'blur',
-          }
-        ],
-        lnglat:[
-          {
-            required:true,
-            message:'经纬度不能为空',
-            trigger:'change',
-          }
-        ],
-      }
 
       const areaChange = (val)=>{
         form.area.value = val;
@@ -235,6 +224,9 @@ export default {
       const reset = ()=>{
           formCmpRef.value.resetForm();
           parkingadd_cascader.value.clearCascader();
+          button.Flag='add';
+          button.Content ='立即创建'
+
       }
 
       function getDetaile(){
@@ -279,7 +271,6 @@ export default {
         setMapCenter,
         amap,
         onSubmit,
-        rules,
         parkingadd_cascader,
         loading,
         parking_status,

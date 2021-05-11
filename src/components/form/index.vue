@@ -1,7 +1,6 @@
 <template>
   <el-form
     ref="formRef"
-    :rules='formConfig.rules'
     :model='formConfig.forms'
     label-width="100px"
   >
@@ -11,6 +10,7 @@
       :label='item.label'
       :prop='item.prop'
       :label-width='item.label_width'
+      :rules='item.rules'
     >
       <!--input-->
       <el-input
@@ -44,6 +44,7 @@
         :placeholder='item.placeholder'
         :style="{width:item.width}"
         v-model='forms[item.prop]'
+        :filterable='item.filterable'
       >
         <el-option
           v-for="option in item.options"
@@ -70,10 +71,6 @@ export default {
             type:Object,
             default:()=>{}
         },
-        rules:{
-            type:Object,
-            default:()=>{}
-        },
     },
     components:{
         
@@ -81,8 +78,6 @@ export default {
     setup(props){
         const formConfig = reactive(
             {
-                rules:{
-                },
                 forms:{
                 },
             }
@@ -91,7 +86,6 @@ export default {
         const formConfigs = toRefs(formConfig)
         function initForm(){
             formConfig.forms = props.formModel;
-            formConfig.rules = props.rules;
         }
 
         initForm();
