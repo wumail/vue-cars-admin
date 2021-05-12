@@ -1,91 +1,40 @@
 <template>
   <div>
     <div class="filter-form">
-      <el-row>
-        <el-col :span='22'>
-          <el-form
-            :inline="true"
-            :model="filter"
-            ref='filterRef'
-            class="demo-form-inline"
-          >
-            <el-form-item
-              label="停车场"
-              prop='parkingName'
-            >
-              <el-input
-                v-model="filter.parkingName"
-                placeholder="停车场"
-              ></el-input>
-            </el-form-item>
-            <el-form-item
-              label="区域"
-              prop='area'
-            >
-              <CityArea
-                ref="parkingadd_cascader"
-                :areavalue='filter.area'
-                @areaChange='areaChange'
-              />
-            </el-form-item>
-            <el-form-item
-              label="类型"
-              prop='type'
-            >
-              <el-select
-                v-model="filter.type"
-                placeholder="类型"
-                class="width-100"
-              >
-                <el-option
-                  v-for="type in parking_type"
-                  :key="type.value"
-                  :value="type.value"
-                  :label="type.label"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item
-              label="禁启用"
-              prop='status'
-            >
-              <el-select
-                v-model="filter.status"
-                placeholder="禁启用"
-                class="width-100"
-              >
-                <el-option
-                  v-for="status in parking_status"
-                  :key="status.value"
-                  :value="status.value"
-                  :label="status.label"
-                ></el-option>
-              </el-select>
-            </el-form-item>
-            <el-form-item>
-              <el-button
-                type="primary"
-                @click='search'
-              >查询</el-button>
-            </el-form-item>
-            <el-form-item>
-              <el-button
-                type="info"
-                @click='reset'
-                plain
-              >重置查询</el-button>
-            </el-form-item>
-          </el-form>
-        </el-col>
-        <el-col :span='2'>
+      <Search
+        ref="SearchRef"
+        :searchItem='searchItem'
+        :searchModel='searchModel'
+      >
+        <template #buttonSearch>
+          <el-button
+            type="primary"
+            @click='search'
+          >查询</el-button>
+        </template>
+        <template #buttonReset>
+          <el-button
+            type="info"
+            @click='reset'
+            plain
+          >重置查询</el-button>
+        </template>
+        <template #buttonCreate>
           <router-link to="ParkingAdd">
             <el-button
               class="pull-right"
               type='primary'
             >新增停车场</el-button>
           </router-link>
-        </el-col>
-      </el-row>
+        </template>
+        <template #CityArea>
+          <CityArea
+            ref="parkingadd_cascader"
+            :areavalue='searchModel.area'
+            @areaChange='areaChange'
+          />
+        </template>
+      </Search>
     </div>
 
     <div class="table-form">
@@ -145,6 +94,7 @@ import { ParkingStatus } from "@/api/parking.js";
 import { Delete } from "@/api/common.js";
 import CityArea from '@/components/cascader/cityArea.vue';
 import AmapDialog from "@/components/dialog/amapDialog.vue";
+import Search from "@/components/search/index.vue";
 import TableCmp from "@/components/table/index.vue";
 
 
@@ -154,6 +104,7 @@ export default {
       CityArea,
       AmapDialog,
       TableCmp,
+      Search,
     },
     setup(){
         //store
@@ -165,21 +116,12 @@ export default {
         //router
         const router = useRouter();
         //子组件Ref
-        const filterRef = ref('');
         const parkingadd_cascader = ref('');
         const amapRef = ref('');
         const tableRef = ref('');
         //ref
         const switchLoading = ref(false);
         const deleteLoading = ref(false);
-        //filter
-        const filter = reactive( {
-          parkingName: '',
-          area: '',
-          type:'',
-          status:'',
-        })
-        const filters = toRefs(filter);
         //cascader
         const props = reactive({ expandTrigger: 'hover' })
         const value = reactive([])
@@ -238,12 +180,65 @@ export default {
         provide('dialogVisible',dialogVisible);
         provide('lnglat',dialogVisible);
 
+        const searchItem =reactive(
+          {
+            col1:{
+              span:22,
+              colItem:[
+                {
+                  type:'input',label:'停车场',placeholder:'停车场',
+                  prop:'parkingName',
+                },
+                {
+                  type:'slot',slot:'CityArea',label:'区域',
+                  prop:'area'
+                },
+                {
+                  type:'select',label:'类型',placeholder:'类型',
+                  prop:'type',width:'100px',
+                  options:parking_type
+                },
+                {
+                  type:'select',label:'禁启用',placeholder:'禁启用',
+                  prop:'status',width:'100px',
+                  options:parking_status
+                },
+                {
+                  type:'slot',slot:'buttonSearch'
+                },
+                {
+                  type:'slot',slot:'buttonReset'
+                },
+              ]
+            },
+            col2:{
+              span:2,
+              colItem:[
+                {
+                  type:'slot',slot:'buttonCreate'
+                },
+              ]
+            }
+          }
+        )
+
+        const searchModel = reactive(
+          {
+            parkingName: '',
+            area: '',
+            type:'',
+            status:'',
+          }
+        )
+        const filters = toRefs(searchModel);
+
+        const SearchRef = ref('');
         // onBeforeMount(()=>{
         //   getDataResource()
         // })
 
         const areaChange = (val)=>{
-          filter.area = val;
+          searchModel.area = val;
         }
 
         function search(){
@@ -251,8 +246,9 @@ export default {
         }
 
         function reset(){
-          filterRef.value.resetFields();
+          SearchRef.value.resetForm();
           parkingadd_cascader.value.clearCascader();
+          console.log(parkingadd_cascader.value);
           tableRef.value.filterTableResource(filters);
         }
 
@@ -298,8 +294,6 @@ export default {
           })
         }
         return{
-            filter,
-            filterRef,
             parkingadd_cascader,
             props,
             value,
@@ -317,6 +311,9 @@ export default {
             changeStatus,
             switchLoading,
             deleteLoading,
+            searchItem,
+            SearchRef,
+            searchModel,
         }
     }
 }

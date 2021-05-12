@@ -1,46 +1,32 @@
 <template>
   <div class="brand-list">
-    <el-row>
-      <el-col :span='18'>
-        <el-form
-          ref="brandRef"
-          :inline="true"
-          :model="filter"
-          class="demo-form-inline"
-        >
-          <el-form-item
-            label="车辆品牌"
-            prop='brand'
-          >
-            <el-input
-              v-model="filter.brand"
-              placeholder="车辆品牌"
-            ></el-input>
-          </el-form-item>
-
-          <el-form-item>
-            <el-button
-              type="danger"
-              @click="search"
-            >查询</el-button>
-          </el-form-item>
-          <el-form-item>
-            <el-button
-              plain
-              type="info"
-              @click="reset"
-            >重置查询</el-button>
-          </el-form-item>
-        </el-form>
-      </el-col>
-      <el-col :span='6'>
+    <Search
+      ref="SearchRef"
+      :searchItem='searchItem'
+      :searchModel='searchModel'
+    >
+      <template #buttonSearch>
+        <el-button
+          type="danger"
+          @click="search"
+        >查询</el-button>
+      </template>
+      <template #buttonReset>
+        <el-button
+          plain
+          type="info"
+          @click="reset"
+        >重置查询</el-button>
+      </template>
+      <template #buttonCreate>
         <el-button
           class="pull-right"
           type='primary'
           @click="openDialog"
         >新增品牌</el-button>
-      </el-col>
-    </el-row>
+      </template>
+
+    </Search>
     <div class="table-form">
       <TableCmp
         :config='tableConfig'
@@ -91,12 +77,14 @@ import { ElMessage  } from 'element-plus';
 import { BrandStatus } from "@/api/brand.js";
 import TableCmp from "@/components/table/index.vue";
 import CarsDialog from "@/components/dialog/addCars.vue";
+import Search from "@/components/search/index.vue";
 
 export default {
     name:'BrandList',
     components:{
       TableCmp,
       CarsDialog,
+      Search,
     },
     setup(){
         const tableConfig ={
@@ -130,19 +118,53 @@ export default {
                 pageNumber:1,
           },
         }
+        
+        const searchItem =reactive(
+          {
+            col1:{
+              span:22,
+              colItem:[
+                {
+                  type:'input',label:'车辆品牌',placeholder:'车辆品牌',
+                  prop:'brand',
+                },
+                {
+                  type:'slot',slot:'buttonSearch'
+                },
+                {
+                  type:'slot',slot:'buttonReset'
+                },
+              ]
+            },
+            col2:{
+              span:2,
+              colItem:[
+                {
+                  type:'slot',slot:'buttonCreate'
+                },
+              ]
+            }
+          }
+        )
+
+        const searchModel = reactive(
+          {
+            brand:'',
+          }
+        )
+        const SearchRef = ref('');
 
         const filter = reactive( {
-          brand:'',
+              brand:'',
         })
 
-        const filters = toRefs(filter);
+        const filters = toRefs(searchModel);
 
         const props = reactive({ expandTrigger: 'hover' })
         const value = reactive([])
    
         const tableRef = ref('');
         const dialogRef = ref('');
-        const brandRef = ref('');
         const dialogVisible = ref(false);
         const switchLoading = ref(false);
         const deleteLoading = ref(false);
@@ -198,7 +220,7 @@ export default {
         }
 
         function reset(){
-          brandRef.value.resetFields();
+          SearchRef.value.resetForm();
           tableRef.value.filterTableResource(filters);
           
         }
@@ -226,7 +248,6 @@ export default {
             rowDelete,
             tableRef,
             dialogRef,
-            brandRef,
             changeStatus,
             brandAbout,
             search,
@@ -234,6 +255,9 @@ export default {
             brandCallback,
             brandInfoClear,
             openDialog,
+            searchItem,
+            SearchRef,
+            searchModel,
         }
     }
 }

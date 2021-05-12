@@ -23,17 +23,31 @@ const state = {
         { label: "未年检", value: false },
         { label: "已年检", value: true }
     ],
+    year_check_1: [
+        { label: "未年检", value: "0" },
+        { label: "已年检", value: "1" }
+    ],
     // 档位
     gear: [
         { label: "手动", value: 1 },
         { label: "自动", value: 2 },
         { label: "人工智能", value: 3 }
     ],
+    gear_1: [
+        { label: "手动", value: "1" },
+        { label: "自动", value: "2" },
+        { label: "人工智能", value: "3" }
+    ],
     // 能源类型
     energyType: [
         { label: "电", value: 1 },
         { label: "油", value: 2 },
         { label: "混合动力", value: 3 }
+    ],
+    energyType_1: [
+        { label: "电", value: "1" },
+        { label: "油", value: "2" },
+        { label: "混合动力", value: "3" }
     ],
     // 性别
     gender: [

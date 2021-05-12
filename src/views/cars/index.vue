@@ -1,7 +1,34 @@
 <template>
   <div>
     <div class="filter-form">
-      <el-row>
+      <Search
+        ref="SearchRef"
+        :searchItem='searchItem'
+        :searchModel='searchModel'
+      >
+        <template #buttonSearch>
+          <el-button
+            type="primary"
+            @click='search'
+          >查询</el-button>
+        </template>
+        <template #buttonReset>
+          <el-button
+            plain
+            type="info"
+            @click="reset"
+          >重置查询</el-button>
+        </template>
+        <template #buttonCreate>
+          <router-link to="CarsAdd">
+            <el-button
+              class="pull-right"
+              type='primary'
+            >新增停车场</el-button>
+          </router-link>
+        </template>
+      </Search>
+      <!-- <el-row>
         <el-col :span='22'>
           <el-form
             :inline="true"
@@ -78,14 +105,14 @@
           </el-form>
         </el-col>
         <el-col :span='2'>
-          <router-link to="ParkingAdd">
+          <router-link to="CarsAdd">
             <el-button
               class="pull-right"
               type='primary'
             >新增停车场</el-button>
           </router-link>
         </el-col>
-      </el-row>
+      </el-row> -->
     </div>
 
     <div class="table-form">
@@ -131,7 +158,6 @@
         </template>
       </TableCmp>
     </div>
-    <AmapDialog ref='amapRef' />
   </div>
 </template>
 
@@ -144,45 +170,34 @@ import { ElMessage,ElMessageBox  } from 'element-plus';
 import { CarsStatus } from "@/api/car.js";
 import { Delete } from "@/api/common.js";
 import CityArea from '@/components/cascader/cityArea.vue';
-import AmapDialog from "@/components/dialog/amapDialog.vue";
 import TableCmp from "@/components/table/index.vue";
+import Search from "@/components/search/index.vue";
 
 
 export default {
     name:'Parking',
     components:{
       CityArea,
-      AmapDialog,
       TableCmp,
+      Search,
     },
     setup(){
         //store
         const store = useStore();
-        const parking_status = store.state.config.parking_status;
+        const parking_status = store.state.config.radio_disabled;
         const parking_type = store.state.config.parking_type;
-        const year_check = store.state.config.year_check;
+        const year_check = store.state.config.year_check_1;
         const gear = store.state.config.gear;
-        const energyType = store.state.config.energyType;
-        provide('parking_Status',parking_status)
-        provide('parking_Type',parking_type)
+        const energyType = store.state.config.energyType_1;
         //router
         const router = useRouter();
         //子组件Ref
         const filterRef = ref('');
         const parkingadd_cascader = ref('');
-        const amapRef = ref('');
         const tableRef = ref('');
         //ref
         const switchLoading = ref(false);
         const deleteLoading = ref(false);
-        //filter
-        const filter = reactive( {
-          parkingName: '',
-          address: '',
-          type:'',
-          status:'',
-        })
-        const filters = toRefs(filter);
         //cascader
         const props = reactive({ expandTrigger: 'hover' })
         const value = reactive([])
@@ -223,7 +238,7 @@ export default {
               }
             },
             {
-                label:'禁启用',prop:'status',
+              label:'禁启用',prop:'status',
                 type:'slot',columnWidth:'81',
                 slot:'table_status',
             },
@@ -252,38 +267,96 @@ export default {
           checkbox:true,
           url:'carsList',
           pagination:{
-                flag:true,
+            flag:true,
                 pageSize:10,
                 pageNumber:1,
           },
         };
+        //search
+        const searchItem =reactive(
+          {
+            col1:{
+              span:17,
+              colItem:[
+                {
+                  type:'input',label:'车辆品牌',placeholder:'车辆品牌',
+                  prop:'nameCh',width:'200px'
+                },
+                {
+                  type:'input',label:'停车场',placeholder:'停车场',
+                  prop:'parkingName',width:'200px'
+                },
+                {
+                  type:'input',label:'区域',placeholder:'区域',
+                  prop:'address',
+                },
+                {
+                  type:'select',label:'年检',
+                  prop:'yearCheck',width:'100px',
+                  options:year_check
+                },
+                {
+                  type:'select',label:'能源类型',
+                  prop:'energyType',width:'100px',
+                  options:energyType
+                },
+                {
+                  type:'select',label:'禁启用',
+                  prop:'status',width:'100px',
+                  options:parking_status
+                },
+              ]
+            },
+            col2:{
+              span:4,
+              colItem:[
+                {
+                  type:'slot',slot:'buttonSearch'
+                },
+                {
+                  type:'slot',slot:'buttonReset'
+                },
+              ]
+            },
+            col3:{
+              span:3,
+              colItem:[
+                {
+                  type:'slot',slot:'buttonCreate'
+                },
+              ]
+            }
+          }
+        )
+        
+        //filter
+        const searchModel = reactive(
+          {
+            parkingName:'',
+            nameCh:'',
+            address:'',
+            yearCheck:'',
+            energyType:'',
+            status:'',
+          }
+        )
+        const filters = toRefs(searchModel);
+        const SearchRef = ref('');
         //provider
-        const dialogVisible = ref(false);
-        provide('dialogVisible',dialogVisible);
-        provide('lnglat',dialogVisible);
 
         // onBeforeMount(()=>{
         //   getDataResource()
         // })
 
-        const areaChange = (val)=>{
-          filter.area = val;
-        }
-
         function search(){
+          console.log(searchModel);
           tableRef.value.filterTableResource(filters);
         }
 
         function reset(){
-          filterRef.value.resetFields();
-          parkingadd_cascader.value.clearCascader();
+          SearchRef.value.resetForm();
+          // parkingadd_cascader.value.clearCascader();
           tableRef.value.filterTableResource(filters);
-        }
-
-        function amapDialog(row){
-          dialogVisible.value=true;
-          amapRef.value.setLnglat(row.lnglat);
-          amapRef.value.setTitle(row);
         }
 
         function rowEdit(id){
@@ -322,18 +395,14 @@ export default {
           })
         }
         return{
-            filter,
             filterRef,
             parkingadd_cascader,
             props,
             value,
-            areaChange,
             parking_status,
             parking_type,
             search,
             reset,
-            amapDialog,
-            amapRef,
             tableRef,
             rowEdit,
             rowDelete,
@@ -341,6 +410,9 @@ export default {
             changeStatus,
             switchLoading,
             deleteLoading,
+            searchItem,
+            SearchRef,
+            searchModel,
         }
     }
 }
