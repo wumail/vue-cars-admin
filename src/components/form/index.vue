@@ -53,13 +53,22 @@
           :label='option.value'
         ></el-option>
       </el-select>
-
+      <!--upload-->
+      <template v-if="item.type === 'upload'">
+        <Upload
+          :url='forms[item.prop]'
+          :upLoadProp='item.prop'
+          @uploadImgUrl='uploadImgUrl'
+        />
+      </template>
     </el-form-item>
   </el-form>
 </template>
 
 <script>
-import { onBeforeMount, reactive, ref, toRefs } from 'vue'
+import { provide, reactive, ref, toRefs } from 'vue'
+import Upload from "../upload/index";
+
 export default {
     name:'Form',
     props:{
@@ -73,7 +82,7 @@ export default {
         },
     },
     components:{
-        
+        Upload,
     },
     setup(props){
         const formConfig = reactive(
@@ -97,6 +106,9 @@ export default {
         async function formValidate(){
             return formRef.value.validate()
         }
+        function uploadImgUrl(data) {
+          formConfig.forms[data.object] = data.value
+        }
 
         return{
             formConfig,
@@ -104,6 +116,7 @@ export default {
             formRef,
             resetForm,
             formValidate,
+            uploadImgUrl,
         }
     }
 }

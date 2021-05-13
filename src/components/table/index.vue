@@ -52,7 +52,7 @@
           <template v-slot='scoped'>
             <img
               :src="scoped.row[item.prop]"
-              :alt="scoped.row.imgUrl"
+              :alt="scoped.row[item.prop]"
               :width='item.imgWidth || 50'
             >
           </template>

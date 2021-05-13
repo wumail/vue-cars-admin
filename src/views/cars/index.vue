@@ -218,6 +218,11 @@ export default {
               imgWidth:72,
             },
             {
+              label:'预览图',prop:'carsImg',
+              type:'image',columnWidth:'99',
+              imgWidth:72,
+            },
+            {
               label:'年检',prop:'yearCheck',
               type:'callback',columnWidth:'100',
               callback:(row,prop)=>{

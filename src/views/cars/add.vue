@@ -112,7 +112,7 @@
         >{{button.Content}}</el-button>
       </template>
     </FormCmp>
-    </div>
+  </div>
 </template>
 
 <script>
@@ -153,7 +153,7 @@ export default {
         Content:'立即创建',
         Flag:'add',
       })
-      
+
       const progressColors = reactive(
         [
           {color: '#f56c6c', percentage: 25},
@@ -220,6 +220,14 @@ export default {
             }
           },
           {
+            type:'upload',label:'缩略图',
+            prop:'carsImg',
+            rules:{
+              required:true,
+              message:'请上传车辆缩略图',
+            }
+          },
+          {
             type:'radio',label:'年检',
             prop:'yearCheck',options:year_check,
           },
@@ -276,6 +284,7 @@ export default {
           status:false,
           carsAttr:{},
           content:'',
+          carsImg:'',
         }
       )
       const formCmpRef =ref('');
@@ -354,6 +363,7 @@ export default {
       
       function  addCars() {
         loading.value = true;
+        // console.log(forms);
         CarsAdd(forms).then((response)=>{
           ElMessage({
             message: response.message,
@@ -419,7 +429,7 @@ export default {
       function getDetaile(){
         CarsDetailed({id:id.value}).then((response)=>{
           const data = response.data;
-          console.log(data);
+          // console.log(data);
           button.Content = '立即修改';
           button.Flag = 'edit';
           forms.carsBrandId=data.carsBrandId;
@@ -436,6 +446,7 @@ export default {
           forms.oil=data.oil;
           forms.status=data.status;
           forms.carsAttr=data.carsAttr;
+          forms.carsImg=data.carsImg;
           if(data.carsAttr){
             const parseData = JSON.parse(data.carsAttr)
             for (const key in parseData) {
@@ -445,7 +456,7 @@ export default {
                 key: Date.now()
               })
             }
-            console.log(domains);
+            // console.log(domains);
           }
           // domains = data.carsAttr;
           forms.content=data.content;
@@ -475,6 +486,7 @@ export default {
         button.Content ='立即创建'
       }
 
+
       onBeforeMount(()=>{
         if(id.value){
           getDetaile();
@@ -495,7 +507,7 @@ export default {
         loading,
         onSubmit,
         formatDate,
-        energyType
+        energyType,
       }
     }
 }
